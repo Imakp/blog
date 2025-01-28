@@ -58,9 +58,10 @@ import {
   ChevronDown,
   Youtube as YoutubeIcon,
   User,
+  FilePlus,
 } from "lucide-react";
 
-const Editor = ({ isDark, setLocalBlogs }) => {
+const Editor = ({ isDark, setServerBlogs }) => {
   const navigate = useNavigate();
   const [theme, setTheme] = useState("light");
   const [selectedColor, setSelectedColor] = useState("#000000");
@@ -69,6 +70,8 @@ const Editor = ({ isDark, setLocalBlogs }) => {
   const [showExtendedTools, setShowExtendedTools] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const ydoc = new Y.Doc();
+
+  const [isNewPost, setIsNewPost] = useState(true);
 
   const updateWordCount = useCallback((editor) => {
     const text = editor.state.doc.textContent;
@@ -224,9 +227,17 @@ const Editor = ({ isDark, setLocalBlogs }) => {
 
   useEffect(() => {
     if (!editor) return;
-    const savedContent = localStorage.getItem("blog-content");
-    if (savedContent) editor.commands.setContent(savedContent);
-  }, [editor]);
+
+    // Only load saved content if we're not creating a new post
+    if (!isNewPost) {
+      const savedContent = localStorage.getItem("blog-content");
+      if (savedContent) editor.commands.setContent(savedContent);
+    } else {
+      // Clear localStorage and editor content for new posts
+      localStorage.removeItem("blog-content");
+      editor.commands.setContent("");
+    }
+  }, [editor, isNewPost]);
 
   if (!editor) return null;
 
@@ -258,23 +269,52 @@ const Editor = ({ isDark, setLocalBlogs }) => {
     </div>
   );
 
-  const handlePublish = () => {
+  const handleNewPost = () => {
+    setIsNewPost(true);
+    editor.commands.clearContent();
+    localStorage.removeItem("blog-content");
+  };
+
+  const handlePublish = async () => {
     const title = prompt("Enter post title:");
-    if (!title || !title.trim()) return;
+    const metaDescription = prompt("Enter meta description:");
+    const keywords = prompt("Enter comma-separated keywords:");
+
+    if (!title || !metaDescription || !keywords) {
+      return alert("All SEO fields are required!");
+    }
 
     const newPost = {
-      id: uuidv4(),
-      title: title.trim(),
+      title,
       content: editor.getHTML(),
-      date: new Date().toISOString(),
+      metaDescription,
+      keywords: keywords.split(",").map((k) => k.trim()),
     };
 
-    const existingPosts = JSON.parse(localStorage.getItem("blogs") || "[]");
-    const updatedPosts = [newPost, ...existingPosts];
+    try {
+      const response = await fetch("/api/blogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPost),
+      });
 
-    localStorage.setItem("blogs", JSON.stringify(updatedPosts));
-    setLocalBlogs(updatedPosts);
-    navigate(`/post/${newPost.id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const savedPost = await response.json();
+      setServerBlogs((prev) => [savedPost, ...prev]);
+
+      // Clear localStorage and editor content after successful publish
+      localStorage.removeItem("blog-content");
+      editor.commands.clearContent();
+      setIsNewPost(true);
+
+      navigate(`/post/${savedPost.slug}`);
+    } catch (error) {
+      console.error("Error saving post:", error);
+      alert("Failed to save post. Check console for details.");
+    }
   };
 
   return (
@@ -435,6 +475,11 @@ const Editor = ({ isDark, setLocalBlogs }) => {
                   onClick={() => editor.chain().focus().redo().run()}
                   icon={RotateCw}
                   tooltip="Redo"
+                />
+                <MenuButton
+                  onClick={handleNewPost}
+                  icon={FilePlus}
+                  tooltip="New Post"
                 />
               </ToolbarGroup>
             </div>

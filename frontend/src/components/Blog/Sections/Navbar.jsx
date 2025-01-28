@@ -11,16 +11,7 @@ export default function Navbar({ isDark, setIsDark }) {
           <h1 className="text-3xl font-bold">Ankit's Blog</h1>
         </Link>
         <div className="flex items-center gap-4">
-          <Link
-            to="/write"
-            className={`px-4 py-2 rounded-lg ${
-              isDark
-                ? "hover:bg-gray-700 text-gray-100"
-                : "hover:bg-gray-100 text-gray-800"
-            }`}
-          >
-            Write
-          </Link>
+          
           <button
             onClick={() => setIsDark(!isDark)}
             className={`p-2 rounded-full transition-colors ${

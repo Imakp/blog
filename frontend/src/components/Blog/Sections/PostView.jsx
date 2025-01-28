@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import SEO from "./SEO";
 
 const PostView = ({ isDark }) => {
-  const { id } = useParams();
+  const { "*": slug } = useParams();
   const [post, setPost] = useState(null);
 
   useEffect(() => {
-    const savedPosts = JSON.parse(localStorage.getItem("blogs") || "[]");
-    const foundPost = savedPosts.find((post) => post.id === id);
-    setPost(foundPost);
-  }, [id]);
+    const fetchPost = async () => {
+      try {
+        const response = await fetch(`/api/blogs/${slug}`);
+        const data = await response.json();
+        setPost(data);
+      } catch (error) {
+        console.error("Error fetching post:", error);
+      }
+    };
+    fetchPost();
+  }, [slug]);
 
   if (!post)
     return (
@@ -27,10 +35,15 @@ const PostView = ({ isDark }) => {
         isDark ? "bg-gray-900 text-gray-100" : "bg-white text-gray-900"
       }`}
     >
+      <SEO
+        title={post.title}
+        description={post.metaDescription}
+        keywords={post.keywords?.join(", ")}
+      />
       <article className="max-w-3xl mx-auto prose lg:prose-xl dark:prose-invert">
         <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
         <div className="text-sm opacity-75 mb-8">
-          Posted on {new Date(post.date).toLocaleDateString()}
+          Posted on {new Date(post.createdAt).toLocaleDateString()}
         </div>
         <div dangerouslySetInnerHTML={{ __html: post.content }} />
       </article>

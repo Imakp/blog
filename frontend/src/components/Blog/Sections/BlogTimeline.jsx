@@ -164,25 +164,26 @@ const BlogTimeline = ({ blogData, isDark }) => {
                             isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
                           }`}
                         >
-                          <Link
-                            to={`/post/${article.id}`}
-                            className="flex items-center hover:underline"
+                          <span
+                            className={`mr-4 ${
+                              isDark ? "text-gray-500" : "text-gray-400"
+                            }`}
                           >
-                            <span
-                              className={`mr-4 ${
-                                isDark ? "text-gray-500" : "text-gray-400"
-                              }`}
+                            {article.day}
+                          </span>
+                          <span
+                            className={`${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            -
+                            <Link
+                              to={`/post/${article.slug}`}
+                              className="items-center hover:underline"
                             >
-                              {article.day}
-                            </span>
-                            <span
-                              className={`${
-                                isDark ? "text-gray-300" : "text-gray-700"
-                              }`}
-                            >
-                              - {article.title}
-                            </span>
-                          </Link>
+                              <span className="ml-2">{article.title}</span>
+                            </Link>
+                          </span>
                         </motion.div>
                       ))}
                     </div>
