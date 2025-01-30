@@ -21,9 +21,11 @@ const Blog = () => {
       try {
         const response = await fetch("/api/blogs");
         const data = await response.json();
-        setServerBlogs(data);
+        // Check if data has pagination structure (from api.js)
+        setServerBlogs(data.blogs || []); // Access the blogs array
       } catch (error) {
         console.error("Error fetching blogs:", error);
+        setServerBlogs([]); // Ensure array fallback
       }
     };
     fetchBlogs();
@@ -82,7 +84,7 @@ const Blog = () => {
               </motion.div>
 
               <div className="flex-1 lg:overflow-y-auto lg:h-[calc(100vh-6rem)] no-scrollbar">
-                <BlogTimeline blogData={processedBlogData()} isDark={isDark} />
+                <BlogTimeline blogs={serverBlogs} isDark={isDark} />
               </div>
             </div>
           </>

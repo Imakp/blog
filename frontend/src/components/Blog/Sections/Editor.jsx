@@ -303,7 +303,7 @@ const Editor = ({ isDark, setServerBlogs }) => {
       }
 
       const savedPost = await response.json();
-      setServerBlogs((prev) => [savedPost, ...prev]);
+      setServerBlogs((prev) => [savedPost, ...prev.blogs]);
 
       // Clear localStorage and editor content after successful publish
       localStorage.removeItem("blog-content");

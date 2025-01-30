@@ -2,50 +2,67 @@ import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-const BlogTimeline = ({ blogData, isDark }) => {
+const BlogTimeline = ({ blogs, isDark }) => {
   // Process data to group by year and month with counts
   const processedData = useMemo(() => {
-    return blogData
-      .reduce((acc, yearEntry) => {
-        const year = yearEntry.year;
-        let yearArticleCount = 0;
+    const grouped = blogs.reduce(
+      // Changed blogData to blogs
+      (acc, blog) => {
+        const date = new Date(blog.createdAt);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const yearMonth = `${year}-${month.toString().padStart(2, "0")}`;
+        const day = date.getDate();
+        const time = date.getTime();
 
-        const monthsMap = yearEntry.articles.reduce((monthAcc, article) => {
-          const [monthNumber, day] = article.date.split("-");
-          const month = new Date(year, monthNumber - 1).toLocaleString(
-            "default",
-            { month: "long" }
-          );
-          const yearMonth = `${year}-${monthNumber}`;
+        let yearEntry = acc.find((y) => y.year === year);
+        if (!yearEntry) {
+          yearEntry = { year, count: 0, months: [] };
+          acc.push(yearEntry);
+        }
 
-          if (!monthAcc[yearMonth]) {
-            monthAcc[yearMonth] = {
-              month,
-              articles: [],
-              count: 0,
-            };
-          }
-          monthAcc[yearMonth].articles.push({ ...article, day });
-          monthAcc[yearMonth].count++;
-          yearArticleCount++;
+        let monthEntry = yearEntry.months.find(
+          (m) => m.yearMonth === yearMonth
+        );
+        if (!monthEntry) {
+          monthEntry = {
+            yearMonth,
+            month: date.toLocaleString("default", { month: "long" }),
+            articles: [],
+            count: 0,
+          };
+          yearEntry.months.push(monthEntry);
+        }
 
-          return monthAcc;
-        }, {});
-
-        acc.push({
-          year,
-          count: yearArticleCount,
-          months: Object.entries(monthsMap)
-            .map(([key, value]) => ({
-              ...value,
-              yearMonth: key,
-            }))
-            .sort((a, b) => b.yearMonth.localeCompare(a.yearMonth)),
+        monthEntry.articles.push({
+          ...blog,
+          day: day.toString(),
+          time,
+          date,
         });
+
+        monthEntry.count++;
+        yearEntry.count++;
+
         return acc;
-      }, [])
-      .sort((a, b) => b.year - a.year);
-  }, [blogData]);
+      },
+      [] // Corrected initial value to empty array
+    );
+
+    grouped.sort((a, b) => b.year - a.year);
+
+    grouped.forEach((yearEntry) => {
+      yearEntry.months.sort((a, b) => b.yearMonth.localeCompare(a.yearMonth));
+    });
+
+    grouped.forEach((yearEntry) => {
+      yearEntry.months.forEach((monthEntry) => {
+        monthEntry.articles.sort((a, b) => b.time - a.time);
+      });
+    });
+
+    return grouped;
+  }, [blogs]);
 
   // State initialization with all sections open
   const [expandedYears, setExpandedYears] = useState({});

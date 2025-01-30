@@ -10,7 +10,9 @@ const PostView = ({ isDark }) => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`/api/blogs/${slug}`);
+        const encodedSlug = encodeURIComponent(slug);
+        const response = await fetch(`/api/blogs/${encodedSlug}`);
+        if (!response.ok) throw new Error("Post not found");
         const data = await response.json();
         setPost(data);
       } catch (error) {
