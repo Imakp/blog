@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
-export default function Clock({ isDark }) {
+export default function Clock() {
   const [time, setTime] = useState(new Date());
   const [is24Hour, setIs24Hour] = useState(true);
 
@@ -22,9 +22,7 @@ export default function Clock({ isDark }) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`p-4 rounded-lg ${
-        isDark ? "bg-gray-800" : "bg-white"
-      } shadow-md`}
+      className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md"
     >
       <div className="flex justify-between items-center">
         <span className="text-lg font-medium">
@@ -32,9 +30,7 @@ export default function Clock({ isDark }) {
         </span>
         <button
           onClick={() => setIs24Hour(!is24Hour)}
-          className={`px-2 py-1 rounded ${
-            isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
-          }`}
+          className="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
         >
           {is24Hour ? "24h" : "12h"}
         </button>

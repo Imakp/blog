@@ -61,7 +61,12 @@ import {
   FilePlus,
 } from "lucide-react";
 
-const Editor = ({ isDark, setServerBlogs }) => {
+const Editor = ({
+  isDark,
+  setServerBlogs,
+  showPublishButton = true,
+  onContentChange,
+}) => {
   const navigate = useNavigate();
   const [theme, setTheme] = useState("light");
   const [selectedColor, setSelectedColor] = useState("#000000");
@@ -228,16 +233,23 @@ const Editor = ({ isDark, setServerBlogs }) => {
   useEffect(() => {
     if (!editor) return;
 
-    // Only load saved content if we're not creating a new post
-    if (!isNewPost) {
-      const savedContent = localStorage.getItem("blog-content");
-      if (savedContent) editor.commands.setContent(savedContent);
-    } else {
-      // Clear localStorage and editor content for new posts
-      localStorage.removeItem("blog-content");
-      editor.commands.setContent("");
-    }
-  }, [editor, isNewPost]);
+    let saveTimeout;
+    const handleChange = () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem("blog-content", editor.getHTML());
+        setSaveStatus("Saved");
+        setTimeout(() => setSaveStatus(""), 2000);
+        if (onContentChange) onContentChange(editor.getHTML()); // Add this line
+      }, 1000);
+    };
+
+    editor.on("update", handleChange);
+    return () => {
+      editor.off("update", handleChange);
+      clearTimeout(saveTimeout);
+    };
+  }, [editor, onContentChange]);
 
   if (!editor) return null;
 
@@ -452,12 +464,14 @@ const Editor = ({ isDark, setServerBlogs }) => {
               </ToolbarGroup>
 
               <ToolbarGroup>
-                <MenuButton
-                  onClick={handlePublish}
-                  active={false}
-                  icon={Save}
-                  tooltip="Publish Post"
-                />
+                {showPublishButton && (
+                  <MenuButton
+                    onClick={handlePublish}
+                    active={false}
+                    icon={Save}
+                    tooltip="Publish Post"
+                  />
+                )}
                 <MenuButton
                   onClick={exportToPDF}
                   icon={FileDown}

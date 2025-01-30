@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-const BlogTimeline = ({ blogs}) => {
+const BlogTimeline = ({ blogs }) => {
   const processedData = useMemo(() => {
     const grouped = blogs.reduce((acc, blog) => {
       const date = new Date(blog.createdAt);

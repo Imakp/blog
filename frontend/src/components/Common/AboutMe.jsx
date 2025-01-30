@@ -1,15 +1,13 @@
 // components/AboutMe.jsx
 import { motion } from "framer-motion";
 
-export default function AboutMe({ isDark }) {
+export default function AboutMe() {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.2 }}
-      className={`p-6 rounded-xl ${
-        isDark ? "bg-gray-800" : "bg-white"
-      } shadow-lg`}
+      className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-lg"
     >
       <h2 className="text-xl font-semibold mb-4">About Me</h2>
       <p className="leading-relaxed">

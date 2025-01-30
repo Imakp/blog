@@ -54,9 +54,7 @@ export default function Calendar({ isDark }) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`p-4 rounded-lg ${
-        isDark ? "bg-gray-800" : "bg-white"
-      } shadow-md`}
+      className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md"
     >
       <div className="text-center font-semibold mb-2">
         {month} {year}

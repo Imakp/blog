@@ -31,14 +31,12 @@ const socials = [
   },
 ];
 
-export default function SocialLinks({ isDark }) {
+export default function SocialLinks() {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`p-4 rounded-lg ${
-        isDark ? "bg-gray-800" : "bg-white"
-      } shadow-md`}
+      className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md"
     >
       <div className="flex justify-center gap-4">
         {socials.map((social) => (
@@ -47,11 +45,7 @@ export default function SocialLinks({ isDark }) {
             href={social.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-2xl transition-colors ${
-              isDark
-                ? "text-gray-300 hover:text-white"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
+            className="text-2xl transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
             aria-label={social.name}
           >
             <FontAwesomeIcon icon={social.icon} />

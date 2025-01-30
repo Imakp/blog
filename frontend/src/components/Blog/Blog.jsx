@@ -8,12 +8,12 @@ import BlogTimeline from "./Sections/BlogTimeline";
 import Clock from "../Common/Clock";
 import Calendar from "../Common/Calendar";
 import SocialLinks from "../Common/SocialLinks";
-import Editor from "./Sections/Editor";
-import PostView from "./Sections/PostView";
-import SEO from "./Sections/SEO";
+// import Editor from "./Sections/Editor";
+import PostView from "../Common/PostView";
+import SEO from "../Common/SEO";
 
-const Blog = () => {
-  const [isDark, setIsDark] = useState(false);
+const Blog = ({ isDark, setIsDark }) => {
+  // const [isDark, setIsDark] = useState(false);
   const [serverBlogs, setServerBlogs] = useState([]);
 
   useEffect(() => {
@@ -89,11 +89,6 @@ const Blog = () => {
             </div>
           </>
         }
-      />
-
-      <Route
-        path="/editor"
-        element={<Editor isDark={isDark} setServerBlogs={setServerBlogs} />}
       />
       <Route path="/post/*" element={<PostView isDark={isDark} />} />
     </Routes>
