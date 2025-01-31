@@ -80,10 +80,36 @@ const sanitizeContent = (req, res, next) => {
         "th",
         "td",
         "pre",
+        "iframe", // Added for YouTube embeds
+        "span", // Added for text styling
+        "img", // Added for image support
       ],
       allowedAttributes: {
-        a: ["href", "name", "target"],
+        a: ["href", "name", "target", "class"],
+        div: ["class", "data-type"],
+        iframe: [
+          "src",
+          "class",
+          "frameborder",
+          "allowfullscreen",
+          "width",
+          "height",
+        ],
+        span: ["style", "class"],
+        img: ["src", "alt", "class", "width", "height"],
+        td: ["colspan", "rowspan"],
+        th: ["colspan", "rowspan"],
+        div: ["class", "data-type"],
       },
+      allowedIframeHostnames: ["www.youtube.com", "youtube.com", "youtu.be"],
+      allowedClasses: {
+        div: ["*"],
+        span: ["*"],
+        iframe: ["*"],
+        img: ["*"],
+        a: ["*"],
+      },
+      allowedSchemes: ["http", "https", "mailto", "tel"],
     });
   }
   next();
@@ -117,9 +143,15 @@ router.get(
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Add query to exclude hidden posts by default
+    const query = {};
+    if (req.query.includeHidden !== "true") {
+      query.hidden = { $ne: true };
+    }
+
     const [blogs, total] = await Promise.all([
-      Blog.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      Blog.countDocuments(),
+      Blog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Blog.countDocuments(query),
     ]);
 
     res.json({
@@ -135,29 +167,26 @@ router.get(
 );
 
 router.delete(
-  "/:slug",
+  "/*",
   deleteLimiter,
   asyncHandler(async (req, res) => {
-    const blog = await Blog.findOneAndDelete({ slug: req.params.slug });
+    const slug = req.params[0];
+    const blog = await Blog.findOneAndDelete({ slug });
     if (!blog) {
-      return res
-        .status(404)
-        .json({ message: "Blog not found or already deleted" });
-      delete req.body.createdAt; 
-      Object.assign(blog, req.body);
-    }
+      return res.status(404).json({ message: "Blog not found" });
+    } // Remove accidental 'delete req.body.createdAt' here
     res.json({ message: "Blog deleted successfully", blog });
   })
 );
 
 router.patch(
-  "/:slug/toggle-visibility",
+  "/*/toggle-visibility",
   patchLimiter,
   asyncHandler(async (req, res) => {
-    const blog = await Blog.findOne({ slug: req.params.slug });
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
-    }
+    const slug = req.params[0];
+    console.log("Toggle slug:", slug); // Debug log
+    const blog = await Blog.findOne({ slug });
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
     blog.hidden = !blog.hidden;
     await blog.save();
     res.json(blog);
@@ -165,19 +194,19 @@ router.patch(
 );
 
 router.put(
-  "/:slug",
+  "/*",
   putLimiter,
   sanitizeContent,
   asyncHandler(async (req, res) => {
-    const blog = await Blog.findOne({ slug: req.params.slug });
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
-    }
+    const slug = req.params[0];
+    console.log("Update slug:", slug); // Debug log
+    const blog = await Blog.findOne({ slug });
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
 
+    const originalTitle = blog.title;
     Object.assign(blog, req.body);
 
-    // Re-generate the slug if the title has changed
-    if (req.body.title && req.body.title.trim() !== blog.title.trim()) {
+    if (req.body.title && req.body.title.trim() !== originalTitle.trim()) {
       const datePart = blog.createdAt.toISOString().split("T")[0];
       const titleSlug = slugify(req.body.title.trim(), {
         lower: true,
@@ -192,9 +221,10 @@ router.put(
 );
 
 router.get(
-  "/:slug",
+  "/*",
   asyncHandler(async (req, res) => {
-    const blog = await Blog.findOne({ slug: req.params.slug });
+    const slug = req.params[0]; // Get full path
+    const blog = await Blog.findOne({ slug });
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
     }

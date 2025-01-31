@@ -66,6 +66,7 @@ const Editor = ({
   setServerBlogs,
   showPublishButton = true,
   onContentChange,
+  value = "", // Add this prop
 }) => {
   const navigate = useNavigate();
   const [theme, setTheme] = useState("light");
@@ -166,7 +167,7 @@ const Editor = ({
         placeholder: "Begin writing your story...",
       }),
     ],
-    content: "",
+    content: value,
     autofocus: true,
     editorProps: {
       attributes: {
@@ -211,24 +212,10 @@ const Editor = ({
   };
 
   useEffect(() => {
-    if (!editor) return;
-
-    let saveTimeout;
-    const handleChange = () => {
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(() => {
-        localStorage.setItem("blog-content", editor.getHTML());
-        setSaveStatus("Saved");
-        setTimeout(() => setSaveStatus(""), 2000);
-      }, 1000);
-    };
-
-    editor.on("update", handleChange);
-    return () => {
-      editor.off("update", handleChange);
-      clearTimeout(saveTimeout);
-    };
-  }, [editor]);
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
 
   useEffect(() => {
     if (!editor) return;

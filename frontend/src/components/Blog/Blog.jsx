@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { motion } from "framer-motion";
-import Navbar from "./Sections/Navbar";
+import Navbar from "../Common/Navbar";
 import AboutMe from "../Common/AboutMe";
 import BlogTimeline from "./Sections/BlogTimeline";
 import Clock from "../Common/Clock";
@@ -19,13 +19,13 @@ const Blog = ({ isDark, setIsDark }) => {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
+        // No includeHidden parameter - will only fetch visible posts
         const response = await fetch("/api/blogs");
         const data = await response.json();
-        // Check if data has pagination structure (from api.js)
-        setServerBlogs(data.blogs || []); // Access the blogs array
+        setServerBlogs(data.blogs || []);
       } catch (error) {
         console.error("Error fetching blogs:", error);
-        setServerBlogs([]); // Ensure array fallback
+        setServerBlogs([]);
       }
     };
     fetchBlogs();

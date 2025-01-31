@@ -3,12 +3,33 @@ import { saveAs } from "file-saver";
 import * as Packer from "docx";
 import { Document, Paragraph, TextRun } from "docx";
 import Editor from "./Editor";
+import { useSearchParams } from "react-router-dom";
 
-const BlogForm = ({ setServerBlogs }) => {
+const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
+  const [searchParams] = useSearchParams();
+  const editSlug = searchParams.get("edit");
   const [title, setTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [keywords, setKeywords] = useState("");
   const [content, setContent] = useState("");
+
+  useEffect(() => {
+    if (editSlug) {
+      const fetchBlog = async () => {
+        try {
+          const response = await fetch(`/api/blogs/${editSlug}`);
+          const data = await response.json();
+          setTitle(data.title);
+          setMetaDescription(data.metaDescription);
+          setKeywords(data.keywords.join(", "));
+          setContent(data.content);
+        } catch (error) {
+          console.error("Error fetching blog:", error);
+        }
+      };
+      fetchBlog();
+    }
+  }, [editSlug]);
 
   const handleDownloadDoc = async () => {
     const doc = new Document();
@@ -36,7 +57,7 @@ const BlogForm = ({ setServerBlogs }) => {
       return;
     }
 
-    const newPost = {
+    const postData = {
       title,
       content,
       metaDescription,
@@ -44,32 +65,52 @@ const BlogForm = ({ setServerBlogs }) => {
     };
 
     try {
-      const response = await fetch("/api/blogs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPost),
-      });
+      if (editSlug) {
+        // Update existing post
+        const response = await fetch(`/api/blogs/${editSlug}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(postData),
+        });
 
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
 
-      const savedPost = await response.json();
-      setServerBlogs((prev) => [savedPost, ...prev.blogs]);
-      alert("Published successfully!");
+        alert("Updated successfully!");
+        refreshBlogs();
+        window.history.replaceState(null, "", "/write");
+      } else {
+        // Create new post
+        const response = await fetch("/api/blogs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(postData),
+        });
+
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+
+        const savedPost = await response.json();
+        setServerBlogs((prev) => [savedPost, ...prev]);
+        alert("Published successfully!");
+      }
+
       // Reset form
       setTitle("");
       setMetaDescription("");
       setKeywords("");
       setContent("");
     } catch (error) {
-      console.error("Publish error:", error);
-      alert("Failed to publish post.");
+      console.error(editSlug ? "Update error:" : "Publish error:", error);
+      alert(`Failed to ${editSlug ? "update" : "publish"} post.`);
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold">Create New Blog Post</h1>
+      <h1 className="text-3xl font-bold">
+        {editSlug ? "Edit Blog Post" : "Create New Blog Post"}
+      </h1>
 
       <div className="space-y-4">
         <div>
@@ -106,7 +147,11 @@ const BlogForm = ({ setServerBlogs }) => {
 
         <div>
           <label className="block mb-2 font-medium">Blog Content</label>
-          <Editor onContentChange={setContent} showPublishButton={false} />
+          <Editor
+            onContentChange={setContent}
+            showPublishButton={false}
+            value={content} // Add this line
+          />
         </div>
 
         <div className="flex gap-4 pt-4">
@@ -120,7 +165,7 @@ const BlogForm = ({ setServerBlogs }) => {
             onClick={handlePublish}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
           >
-            Publish Post
+            {editSlug ? "Update Post" : "Publish Post"}
           </button>
         </div>
       </div>
