@@ -1,44 +1,3 @@
-// // server/routes/blogRoutes.js
-// const express = require("express");
-// const router = express.Router();
-// const Blog = require("../models/Blog");
-
-// // Create blog
-// router.post("/", async (req, res) => {
-//   try {
-//     const blog = new Blog(req.body);
-//     await blog.save();
-//     res.status(201).json(blog);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//   }
-// });
-
-// // Get all blogs
-// router.get("/", async (req, res) => {
-//   try {
-//     const blogs = await Blog.find().sort({ createdAt: -1 });
-//     res.json(blogs);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// // Get single blog by slug
-// router.get("/*", async (req, res) => {
-//   // Changed from "/:slug*" to "/*"
-//   try {
-//     const slug = req.params[0]; // Get the entire path after /api/blogs/
-//     const blog = await Blog.findOne({ slug });
-//     if (!blog) return res.status(404).json({ message: "Blog not found" });
-//     res.json(blog);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// module.exports = router;
-
 const express = require("express");
 const router = express.Router();
 const Blog = require("../models/Blog");
@@ -80,9 +39,9 @@ const sanitizeContent = (req, res, next) => {
         "th",
         "td",
         "pre",
-        "iframe", // Added for YouTube embeds
-        "span", // Added for text styling
-        "img", // Added for image support
+        "iframe",
+        "span",
+        "img",
       ],
       allowedAttributes: {
         a: ["href", "name", "target", "class"],
@@ -95,6 +54,9 @@ const sanitizeContent = (req, res, next) => {
           "width",
           "height",
           "class",
+          "title", // Added title
+          "referrerpolicy", // Added referrerpolicy
+          "web-share", // Added web-share
         ],
         span: ["style", "class"],
         img: ["src", "alt", "class", "width", "height"],
@@ -113,14 +75,28 @@ const sanitizeContent = (req, res, next) => {
       allowedSchemes: ["http", "https", "mailto", "tel"],
       transformTags: {
         iframe: (tagName, attribs) => {
-          // Ensure YouTube URLs are properly formatted
-          if (attribs.src) {
-            attribs.src = attribs.src.replace("watch?v=", "embed/");
+          if (
+            attribs.src &&
+            (attribs.src.includes("youtube.com") ||
+              attribs.src.includes("youtu.be"))
+          ) {
+            return {
+              tagName,
+              attribs: {
+                ...attribs,
+                class: "w-full aspect-video rounded-lg my-4",
+                frameborder: "0",
+                allow:
+                  "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+                allowfullscreen: "true",
+                title: "YouTube video player",
+                referrerpolicy: "strict-origin-when-cross-origin",
+                width: "560",
+                height: "315",
+              },
+            };
           }
-          return {
-            tagName,
-            attribs,
-          };
+          return { tagName, attribs };
         },
       },
     });

@@ -90,10 +90,18 @@ const Editor = ({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Disable extensions included elsewhere to avoid duplicates
+        history: false, // Collaboration has its own history
+        bulletList: false,
+        orderedList: false,
+        heading: false,
+        codeBlock: false,
+      }),
       Collaboration.configure({
         document: ydoc,
       }),
+      // Add customized extensions
       BulletList.configure({
         HTMLAttributes: { class: "pl-6 list-disc" },
       }),
@@ -129,37 +137,37 @@ const Editor = ({
       }),
       Youtube.configure({
         inline: false,
+        controls: true,
         HTMLAttributes: {
           class: "w-full aspect-video rounded-lg my-4",
         },
-        allowFullscreen: true,
-        controls: true,
-        modifySchema: (schema) => {
-          schema.attrs["data-youtube-video"] = { default: true };
-          return schema;
-        },
-        renderHTML: ({ HTMLAttributes }) => {
-          const embedUrl = HTMLAttributes.src.replace("watch?v=", "embed/");
-          return [
-            "div",
-            {
-              "data-youtube-video": "true",
-              class: "relative aspect-video w-full my-4",
-            },
-            [
-              "iframe",
-              {
-                ...HTMLAttributes,
-                src: embedUrl,
-                frameborder: "0",
-                allowfullscreen: "true",
-                allow:
-                  "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
-              },
-            ],
-          ];
-        },
       }),
+      // Youtube.configure({
+      //   inline: false,
+      //   HTMLAttributes: {
+      //     class: "w-full aspect-video rounded-lg my-4",
+      //   },
+      //   renderHTML: ({ HTMLAttributes }) => {
+      //     return [
+      //       "div",
+      //       { class: "relative aspect-video w-full my-4" },
+      //       [
+      //         "iframe",
+      //         {
+      //           ...HTMLAttributes,
+      //           width: "560",
+      //           height: "315",
+      //           frameborder: "0",
+      //           title: "YouTube video player",
+      //           allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+      //           referrerpolicy: "strict-origin-when-cross-origin",
+      //           allowfullscreen: true,
+      //           src: `https://www.youtube.com/embed/${HTMLAttributes.src}${HTMLAttributes.src.includes('?') ? '&' : '?'}si=PWwj1XSuFBhz6b8u`,
+      //         },
+      //       ],
+      //     ];
+      //   },
+      // }),
       Markdown,
       Image.configure({
         HTMLAttributes: { class: "rounded-lg my-4 shadow-md max-w-full" },
@@ -222,32 +230,26 @@ const Editor = ({
 
   const addYoutubeVideo = () => {
     const url = prompt("Enter YouTube URL:");
-    if (url) {
-      try {
-        // Extract video ID
-        let videoId = url.match(
-          /(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^\/&#?]+)/
-        )?.[1];
-
-        if (videoId) {
-          editor
-            .chain()
-            .focus()
-            .setYoutubeVideo({
-              src: `https://www.youtube.com/embed/${videoId}`,
-              width: 640,
-              height: 360,
-            })
-            .run();
-        } else {
-          alert("Invalid YouTube URL. Please provide a valid YouTube URL.");
-        }
-      } catch (error) {
-        console.error("Error adding YouTube video:", error);
-        alert("Error adding YouTube video. Please try again.");
-      }
-    }
+    if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
   };
+  
+  // const addYoutubeVideo = () => {
+  //   const url = prompt("Enter YouTube URL:");
+  //   if (!url) return;
+
+  //   // Regular expression to match different YouTube URL formats
+  //   const regExp =
+  //     /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=)|youtu\.be\/)([\w-]{11})(?:\S+)?$/;
+  //   const match = url.match(regExp);
+
+  //   if (!match) {
+  //     alert("Please enter a valid YouTube URL");
+  //     return;
+  //   }
+
+  //   const videoId = match[1];
+  //   editor.chain().focus().setYoutubeVideo({ src: videoId }).run();
+  // };
 
   const handleColorChange = (color) => {
     setSelectedColor(color);
