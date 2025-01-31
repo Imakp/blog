@@ -90,7 +90,7 @@ const Admin = ({ isDark, setIsDark }) => {
       />
 
       <Route
-        path="/admin/write"
+        path="write"
         element={
           <BlogForm
             isDark={isDark}

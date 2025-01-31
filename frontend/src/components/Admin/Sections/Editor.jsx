@@ -129,9 +129,35 @@ const Editor = ({
       }),
       Youtube.configure({
         inline: false,
-        controls: true,
         HTMLAttributes: {
           class: "w-full aspect-video rounded-lg my-4",
+        },
+        allowFullscreen: true,
+        controls: true,
+        modifySchema: (schema) => {
+          schema.attrs["data-youtube-video"] = { default: true };
+          return schema;
+        },
+        renderHTML: ({ HTMLAttributes }) => {
+          const embedUrl = HTMLAttributes.src.replace("watch?v=", "embed/");
+          return [
+            "div",
+            {
+              "data-youtube-video": "true",
+              class: "relative aspect-video w-full my-4",
+            },
+            [
+              "iframe",
+              {
+                ...HTMLAttributes,
+                src: embedUrl,
+                frameborder: "0",
+                allowfullscreen: "true",
+                allow:
+                  "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+              },
+            ],
+          ];
         },
       }),
       Markdown,
@@ -196,7 +222,31 @@ const Editor = ({
 
   const addYoutubeVideo = () => {
     const url = prompt("Enter YouTube URL:");
-    if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    if (url) {
+      try {
+        // Extract video ID
+        let videoId = url.match(
+          /(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^\/&#?]+)/
+        )?.[1];
+
+        if (videoId) {
+          editor
+            .chain()
+            .focus()
+            .setYoutubeVideo({
+              src: `https://www.youtube.com/embed/${videoId}`,
+              width: 640,
+              height: 360,
+            })
+            .run();
+        } else {
+          alert("Invalid YouTube URL. Please provide a valid YouTube URL.");
+        }
+      } catch (error) {
+        console.error("Error adding YouTube video:", error);
+        alert("Error adding YouTube video. Please try again.");
+      }
+    }
   };
 
   const handleColorChange = (color) => {

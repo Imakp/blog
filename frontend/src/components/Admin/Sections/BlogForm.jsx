@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import * as Packer from "docx";
 import { Document, Paragraph, TextRun } from "docx";
@@ -6,6 +6,7 @@ import Editor from "./Editor";
 import { useSearchParams } from "react-router-dom";
 
 const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
+  // ... rest of the component code remains the same
   const [searchParams] = useSearchParams();
   const editSlug = searchParams.get("edit");
   const [title, setTitle] = useState("");
@@ -51,11 +52,18 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
     saveAs(blob, `${title || "blog-post"}.docx`);
   };
 
+  const debugContent = (content) => {
+    console.log("Raw content before submit:", content);
+    console.log("YouTube iframes:", content.match(/<iframe.*?\/iframe>/g));
+  };
+
   const handlePublish = async () => {
     if (!title || !metaDescription || !keywords || !content) {
       alert("All fields are required!");
       return;
     }
+
+    debugContent(content); 
 
     const postData = {
       title,

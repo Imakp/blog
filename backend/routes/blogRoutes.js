@@ -86,14 +86,15 @@ const sanitizeContent = (req, res, next) => {
       ],
       allowedAttributes: {
         a: ["href", "name", "target", "class"],
-        div: ["class", "data-type"],
+        div: ["data-youtube-video", "class"],
         iframe: [
           "src",
-          "class",
           "frameborder",
           "allowfullscreen",
+          "allow",
           "width",
           "height",
+          "class",
         ],
         span: ["style", "class"],
         img: ["src", "alt", "class", "width", "height"],
@@ -110,6 +111,18 @@ const sanitizeContent = (req, res, next) => {
         a: ["*"],
       },
       allowedSchemes: ["http", "https", "mailto", "tel"],
+      transformTags: {
+        iframe: (tagName, attribs) => {
+          // Ensure YouTube URLs are properly formatted
+          if (attribs.src) {
+            attribs.src = attribs.src.replace("watch?v=", "embed/");
+          }
+          return {
+            tagName,
+            attribs,
+          };
+        },
+      },
     });
   }
   next();
