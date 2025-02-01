@@ -1,4 +1,3 @@
-// components/Calendar.jsx
 import { motion } from "framer-motion";
 
 export default function Calendar({ isDark }) {
@@ -12,12 +11,10 @@ export default function Calendar({ isDark }) {
   const days = [];
   let weeks = [];
 
-  // Add empty days for first week
   for (let i = 0; i < firstDay; i++) {
     weeks.push(<div key={`empty-${i}`} />);
   }
 
-  // Fill calendar days
   for (let day = 1; day <= daysInMonth; day++) {
     const isToday = day === today.getDate();
     weeks.push(
@@ -41,7 +38,6 @@ export default function Calendar({ isDark }) {
     }
   }
 
-  // Add remaining days in last incomplete week
   if (weeks.length > 0) {
     days.push(
       <div key="remaining-week" className="grid grid-cols-7 gap-1">

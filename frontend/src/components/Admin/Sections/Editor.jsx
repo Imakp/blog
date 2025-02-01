@@ -63,17 +63,16 @@ import {
 
 const Editor = ({
   isDark,
+  setIsDark,
   setServerBlogs,
   showPublishButton = true,
   onContentChange,
-  value = "", // Add this prop
+  value = "", 
 }) => {
   const navigate = useNavigate();
-  const [theme, setTheme] = useState("light");
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [saveStatus, setSaveStatus] = useState("");
   const [showToolbar, setShowToolbar] = useState(true);
-  const [showExtendedTools, setShowExtendedTools] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const ydoc = new Y.Doc();
 
@@ -91,8 +90,7 @@ const Editor = ({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Disable extensions included elsewhere to avoid duplicates
-        history: false, // Collaboration has its own history
+        history: false,
         bulletList: false,
         orderedList: false,
         heading: false,
@@ -101,7 +99,6 @@ const Editor = ({
       Collaboration.configure({
         document: ydoc,
       }),
-      // Add customized extensions
       BulletList.configure({
         HTMLAttributes: { class: "pl-6 list-disc" },
       }),
@@ -142,32 +139,6 @@ const Editor = ({
           class: "w-full aspect-video rounded-lg my-4 dark:brightness-90",
         },
       }),
-      // Youtube.configure({
-      //   inline: false,
-      //   HTMLAttributes: {
-      //     class: "w-full aspect-video rounded-lg my-4",
-      //   },
-      //   renderHTML: ({ HTMLAttributes }) => {
-      //     return [
-      //       "div",
-      //       { class: "relative aspect-video w-full my-4" },
-      //       [
-      //         "iframe",
-      //         {
-      //           ...HTMLAttributes,
-      //           width: "560",
-      //           height: "315",
-      //           frameborder: "0",
-      //           title: "YouTube video player",
-      //           allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-      //           referrerpolicy: "strict-origin-when-cross-origin",
-      //           allowfullscreen: true,
-      //           src: `https://www.youtube.com/embed/${HTMLAttributes.src}${HTMLAttributes.src.includes('?') ? '&' : '?'}si=PWwj1XSuFBhz6b8u`,
-      //         },
-      //       ],
-      //     ];
-      //   },
-      // }),
       Markdown,
       Image.configure({
         HTMLAttributes: { class: "rounded-lg my-4 shadow-md max-w-full" },
@@ -196,17 +167,17 @@ const Editor = ({
       Table.configure({
         resizable: true,
         HTMLAttributes: {
-          class: "dark:border-gray-600", // Add dark mode border
+          class: "dark:border-gray-600",
         },
       }),
       TableCell.configure({
         HTMLAttributes: {
-          class: "dark:border-gray-600", // Add dark mode border
+          class: "dark:border-gray-600",
         },
       }),
       TableHeader.configure({
         HTMLAttributes: {
-          class: "dark:bg-gray-700 dark:text-white", // Header background
+          class: "dark:bg-gray-700 dark:text-white",
         },
       }),
       TableRow,
@@ -246,24 +217,6 @@ const Editor = ({
     if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
   };
 
-  // const addYoutubeVideo = () => {
-  //   const url = prompt("Enter YouTube URL:");
-  //   if (!url) return;
-
-  //   // Regular expression to match different YouTube URL formats
-  //   const regExp =
-  //     /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=)|youtu\.be\/)([\w-]{11})(?:\S+)?$/;
-  //   const match = url.match(regExp);
-
-  //   if (!match) {
-  //     alert("Please enter a valid YouTube URL");
-  //     return;
-  //   }
-
-  //   const videoId = match[1];
-  //   editor.chain().focus().setYoutubeVideo({ src: videoId }).run();
-  // };
-
   const handleColorChange = (color) => {
     setSelectedColor(color);
     editor.chain().focus().setColor(color).run();
@@ -292,7 +245,7 @@ const Editor = ({
         localStorage.setItem("blog-content", editor.getHTML());
         setSaveStatus("Saved");
         setTimeout(() => setSaveStatus(""), 2000);
-        if (onContentChange) onContentChange(editor.getHTML()); // Add this line
+        if (onContentChange) onContentChange(editor.getHTML()); 
       }, 1000);
     };
 
@@ -369,7 +322,6 @@ const Editor = ({
       const savedPost = await response.json();
       setServerBlogs((prev) => [savedPost, ...prev.blogs]);
 
-      // Clear localStorage and editor content after successful publish
       localStorage.removeItem("blog-content");
       editor.commands.clearContent();
       setIsNewPost(true);
@@ -386,11 +338,7 @@ const Editor = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`h-[80vh] flex flex-col rounded-xl shadow-xl ${
-        theme === "light"
-          ? "bg-white text-gray-900"
-          : "bg-gray-900 text-gray-100"
-      }`}
+      className={`h-[80vh] flex flex-col rounded-xl shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
     >
       <motion.button
         whileHover={{ scale: 1.05 }}
@@ -410,7 +358,6 @@ const Editor = ({
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            // exit={{ opacity: 0, y: -20 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="sticky top-0 z-30 p-2 backdrop-blur-md bg-white/90 dark:bg-gray-900/90 
@@ -558,11 +505,12 @@ const Editor = ({
         >
           <EditorContent
             editor={editor}
-            className="prose prose-headings:text-left dark:prose-invert prose-lg max-w-none 
-          px-6 py-4 mx-auto leading-relaxed pt-[76px] pb-16
-          prose-table:border-collapse prose-td:p-2 prose-th:p-2
-          prose-table:border prose-table:border-gray-200 dark:prose-table:border-gray-600
-          prose-code:before:content-none prose-code:after:content-none" // Add table and code block styling
+            className={`prose prose-headings:text-left prose-lg max-w-none 
+              px-6 py-4 mx-auto leading-relaxed pt-[76px] pb-16
+              prose-table:border-collapse prose-td:p-2 prose-th:p-2
+              prose-table:border prose-table:border-gray-200 dark:prose-table:border-gray-600
+              prose-code:before:content-none prose-code:after:content-none
+              ${isDark ? "dark:prose-invert" : ""}`}
           />
         </motion.div>
       </div>
@@ -586,8 +534,8 @@ const Editor = ({
         </AnimatePresence>
         <div className="flex gap-2">
           <MenuButton
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            icon={theme === "light" ? Moon : Sun}
+            onClick={() => setIsDark(!isDark)}
+            icon={isDark ? Sun : Moon}
             tooltip="Toggle Theme"
           />
         </div>

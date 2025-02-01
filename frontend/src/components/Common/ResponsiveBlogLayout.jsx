@@ -17,7 +17,6 @@ const ResponsiveBlogLayout = ({
 
   return (
     <div className="min-h-screen dark:bg-gray-900">
-      {/* Mobile Header */}
       <div className="lg:hidden sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-md">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
@@ -65,7 +64,6 @@ const ResponsiveBlogLayout = ({
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
@@ -85,9 +83,7 @@ const ResponsiveBlogLayout = ({
         )}
       </AnimatePresence>
 
-      {/* Desktop Layout */}
       <div className="flex flex-col lg:flex-row p-4 lg:p-12 gap-8">
-        {/* Sidebar - Hidden on mobile */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -100,7 +96,6 @@ const ResponsiveBlogLayout = ({
           <SocialLinks />
         </motion.div>
 
-        {/* Main Content */}
         <div className="flex-1 lg:overflow-y-auto lg:h-[calc(100vh-6rem)] no-scrollbar">
           <BlogTimeline />
         </div>

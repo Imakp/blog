@@ -54,9 +54,9 @@ const sanitizeContent = (req, res, next) => {
           "width",
           "height",
           "class",
-          "title", // Added title
-          "referrerpolicy", // Added referrerpolicy
-          "web-share", // Added web-share
+          "title", 
+          "referrerpolicy",
+          "web-share", 
         ],
         span: ["style", "class"],
         img: ["src", "alt", "class", "width", "height"],
@@ -117,8 +117,7 @@ router.post(
   postLimiter,
   sanitizeContent,
   asyncHandler(async (req, res) => {
-    // Inside the POST route
-    delete req.body.createdAt; // Prevent client from setting date
+    delete req.body.createdAt;
     const blog = new Blog(req.body);
     await blog.save();
     res.status(201).json(blog);
@@ -132,7 +131,6 @@ router.get(
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Add query to exclude hidden posts by default
     const query = {};
     if (req.query.includeHidden !== "true") {
       query.hidden = { $ne: true };
@@ -163,7 +161,7 @@ router.delete(
     const blog = await Blog.findOneAndDelete({ slug });
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
-    } // Remove accidental 'delete req.body.createdAt' here
+    }
     res.json({ message: "Blog deleted successfully", blog });
   })
 );
@@ -173,7 +171,7 @@ router.patch(
   patchLimiter,
   asyncHandler(async (req, res) => {
     const slug = req.params[0];
-    console.log("Toggle slug:", slug); // Debug log
+    console.log("Toggle slug:", slug);
     const blog = await Blog.findOne({ slug });
     if (!blog) return res.status(404).json({ message: "Blog not found" });
     blog.hidden = !blog.hidden;
@@ -188,7 +186,7 @@ router.put(
   sanitizeContent,
   asyncHandler(async (req, res) => {
     const slug = req.params[0];
-    console.log("Update slug:", slug); // Debug log
+    console.log("Update slug:", slug);
     const blog = await Blog.findOne({ slug });
     if (!blog) return res.status(404).json({ message: "Blog not found" });
 
@@ -212,7 +210,7 @@ router.put(
 router.get(
   "/*",
   asyncHandler(async (req, res) => {
-    const slug = req.params[0]; // Get full path
+    const slug = req.params[0];
     const blog = await Blog.findOne({ slug });
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });

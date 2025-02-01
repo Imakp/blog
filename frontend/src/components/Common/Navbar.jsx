@@ -1,4 +1,3 @@
-// components/Navbar.jsx
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { FaSun, FaMoon } from "react-icons/fa";

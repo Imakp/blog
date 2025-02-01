@@ -1,4 +1,3 @@
-// server/index.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,21 +7,15 @@ const path = require("path");
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Database connection
 connectDB();
 
-// Routes
 app.use("/api/blogs", blogRoutes);
 
 if (process.env.NODE_ENV === "production") {
-  // Serve static files from client build
   app.use(express.static(path.join(__dirname, "../client/dist")));
-
-  // Handle client-side routing
   app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
   });

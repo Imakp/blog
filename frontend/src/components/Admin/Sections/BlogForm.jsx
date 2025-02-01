@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
-import { saveAs } from "file-saver";
-import * as Packer from "docx";
-import { Document, Paragraph, TextRun } from "docx";
 import Editor from "./Editor";
 import { useSearchParams } from "react-router-dom";
 
-const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
-  // ... rest of the component code remains the same
+const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
   const [searchParams] = useSearchParams();
   const editSlug = searchParams.get("edit");
   const [title, setTitle] = useState("");
@@ -32,26 +28,6 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
     }
   }, [editSlug]);
 
-  const handleDownloadDoc = async () => {
-    const doc = new Document();
-    doc.addSection({
-      properties: {},
-      children: [
-        new Paragraph({
-          children: [new TextRun({ text: title, bold: true, size: 24 })],
-        }),
-        new Paragraph({
-          children: [
-            new TextRun(content.replace(/<[^>]+>/g, "")), // Simple HTML stripping
-          ],
-        }),
-      ],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${title || "blog-post"}.docx`);
-  };
-
   const debugContent = (content) => {
     console.log("Raw content before submit:", content);
     console.log("YouTube iframes:", content.match(/<iframe.*?\/iframe>/g));
@@ -74,7 +50,6 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
 
     try {
       if (editSlug) {
-        // Update existing post
         const response = await fetch(`/api/blogs/${editSlug}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -88,7 +63,6 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
         refreshBlogs();
         window.history.replaceState(null, "", "/write");
       } else {
-        // Create new post
         const response = await fetch("/api/blogs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -103,7 +77,6 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
         alert("Published successfully!");
       }
 
-      // Reset form
       setTitle("");
       setMetaDescription("");
       setKeywords("");
@@ -158,17 +131,13 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
           <Editor
             onContentChange={setContent}
             showPublishButton={false}
-            value={content} // Add this line
+            value={content}
+            isDark={isDark}
+            setIsDark={setIsDark}
           />
         </div>
 
         <div className="flex gap-4 pt-4">
-          <button
-            onClick={handleDownloadDoc}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Download as DOCX
-          </button>
           <button
             onClick={handlePublish}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"

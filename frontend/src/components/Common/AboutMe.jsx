@@ -1,4 +1,3 @@
-// components/AboutMe.jsx
 import { motion } from "framer-motion";
 
 export default function AboutMe() {
