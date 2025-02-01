@@ -70,7 +70,7 @@ const Blog = ({ isDark, setIsDark }) => {
               description="Explore articles about frontend development, reactive frameworks, and web architecture."
               keywords="web development, JavaScript, TypeScript, Solid.js, blog"
             />
-            <div className="flex flex-col lg:flex-row p-6 lg:p-12 gap-8 lg:gap-12 min-h-screen">
+            <div className="flex flex-col lg:flex-row p-6 lg:p-12 gap-8 lg:gap-12 min-h-screen dark:bg-gray-900">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -82,8 +82,7 @@ const Blog = ({ isDark, setIsDark }) => {
                 <AboutMe isDark={isDark} />
                 <SocialLinks isDark={isDark} />
               </motion.div>
-
-              <div className="flex-1 lg:overflow-y-auto lg:h-[calc(100vh-6rem)] no-scrollbar">
+              <div className="flex-1 lg:overflow-y-auto lg:h-[calc(100vh-6rem)] no-scrollbar dark:bg-gray-900">
                 <BlogTimeline blogs={serverBlogs} isDark={isDark} />
               </div>
             </div>

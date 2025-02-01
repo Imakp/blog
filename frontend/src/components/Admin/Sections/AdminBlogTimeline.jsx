@@ -174,7 +174,9 @@ const BlogTimeline = ({ blogs, isDark, refreshBlogs }) => {
                                 to={`/post/${article.slug}`}
                                 className="items-center hover:underline"
                               >
-                                <span className="ml-2">{article.title}</span>
+                                <span className="ml-2 dark:text-gray-200">
+                                  {article.title}
+                                </span>
                               </Link>
                             </span>
                           </div>

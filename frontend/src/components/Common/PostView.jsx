@@ -50,7 +50,7 @@ const PostView = () => {
       />
       <article className="max-w-3xl mx-auto prose lg:prose-xl dark:prose-invert">
         <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
-        <div className="text-sm opacity-75 mb-8">
+        <div className="text-sm opacity-75 mb-8 dark:text-gray-400">
           Posted on {new Date(post.createdAt).toLocaleDateString()}
         </div>
         <div dangerouslySetInnerHTML={{ __html: post.content }} />

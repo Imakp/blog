@@ -10,7 +10,7 @@ export default function AboutMe() {
       className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-lg"
     >
       <h2 className="text-xl font-semibold mb-4">About Me</h2>
-      <p className="leading-relaxed">
+      <p className="leading-relaxed dark:text-gray-300">
         Frontend architect passionate about reactive frameworks and modern web
         experiences. Building the future of web development with Solid.js and
         TypeScript. Open source contributor and tech educator.

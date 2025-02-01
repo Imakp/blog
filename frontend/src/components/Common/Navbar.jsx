@@ -8,7 +8,7 @@ export default function Navbar({ isDark, setIsDark }) {
     <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="space-y-6">
       <div className="flex justify-between items-center">
         <Link to="/">
-          <h1 className="text-3xl font-bold">Ankit's Blog</h1>
+          <h1 className="text-3xl font-bold dark:text-white">Ankit's Blog</h1>
         </Link>
         <div className="flex items-center gap-4">
           <button

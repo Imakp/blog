@@ -139,7 +139,7 @@ const Editor = ({
         inline: false,
         controls: true,
         HTMLAttributes: {
-          class: "w-full aspect-video rounded-lg my-4",
+          class: "w-full aspect-video rounded-lg my-4 dark:brightness-90",
         },
       }),
       // Youtube.configure({
@@ -193,10 +193,23 @@ const Editor = ({
       }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      Table.configure({ resizable: true }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: "dark:border-gray-600", // Add dark mode border
+        },
+      }),
+      TableCell.configure({
+        HTMLAttributes: {
+          class: "dark:border-gray-600", // Add dark mode border
+        },
+      }),
+      TableHeader.configure({
+        HTMLAttributes: {
+          class: "dark:bg-gray-700 dark:text-white", // Header background
+        },
+      }),
       TableRow,
-      TableCell,
-      TableHeader,
       Placeholder.configure({
         placeholder: "Begin writing your story...",
       }),
@@ -232,7 +245,7 @@ const Editor = ({
     const url = prompt("Enter YouTube URL:");
     if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
   };
-  
+
   // const addYoutubeVideo = () => {
   //   const url = prompt("Enter YouTube URL:");
   //   if (!url) return;
@@ -397,7 +410,9 @@ const Editor = ({
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            // exit={{ opacity: 0, y: -20 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
             className="sticky top-0 z-30 p-2 backdrop-blur-md bg-white/90 dark:bg-gray-900/90 
                      border-b border-gray-200 dark:border-gray-700 shadow-sm"
           >
@@ -422,7 +437,6 @@ const Editor = ({
                   tooltip="Underline (⌘U)"
                 />
               </ToolbarGroup>
-
               <ToolbarGroup>
                 {[1, 2, 3].map((level) => (
                   <MenuButton
@@ -436,7 +450,6 @@ const Editor = ({
                   />
                 ))}
               </ToolbarGroup>
-
               <ToolbarGroup>
                 <MenuButton
                   onClick={() =>
@@ -461,7 +474,6 @@ const Editor = ({
                   tooltip="Task List"
                 />
               </ToolbarGroup>
-
               <ToolbarGroup>
                 <MenuButton
                   onClick={addImage}
@@ -485,13 +497,12 @@ const Editor = ({
                   tooltip="Insert YouTube Video"
                 />
               </ToolbarGroup>
-
               <ToolbarGroup>
                 <input
                   type="color"
                   value={selectedColor}
                   onChange={(e) => handleColorChange(e.target.value)}
-                  className="w-6 h-6 rounded cursor-pointer border border-gray-200 dark:border-gray-700"
+                  className="w-6 h-6 rounded cursor-pointer border border-gray-200 dark:border-gray-600 dark:bg-gray-800"
                   title="Text Color"
                 />
                 <MenuButton
@@ -501,7 +512,6 @@ const Editor = ({
                   tooltip="Highlight Text"
                 />
               </ToolbarGroup>
-
               <ToolbarGroup>
                 {showPublishButton && (
                   <MenuButton
@@ -517,7 +527,6 @@ const Editor = ({
                   tooltip="Export to PDF"
                 />
               </ToolbarGroup>
-
               <ToolbarGroup>
                 <MenuButton
                   onClick={() => editor.chain().focus().undo().run()}
@@ -541,11 +550,21 @@ const Editor = ({
       </AnimatePresence>
 
       <div className="flex-1 overflow-y-auto">
-        <EditorContent
-          editor={editor}
-          className="prose prose-headings:text-left dark:prose-invert prose-lg max-w-none 
-                  px-6 py-4 mx-auto leading-relaxed pt-[76px] pb-16"
-        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex-1 overflow-y-auto"
+        >
+          <EditorContent
+            editor={editor}
+            className="prose prose-headings:text-left dark:prose-invert prose-lg max-w-none 
+          px-6 py-4 mx-auto leading-relaxed pt-[76px] pb-16
+          prose-table:border-collapse prose-td:p-2 prose-th:p-2
+          prose-table:border prose-table:border-gray-200 dark:prose-table:border-gray-600
+          prose-code:before:content-none prose-code:after:content-none" // Add table and code block styling
+          />
+        </motion.div>
       </div>
 
       <div

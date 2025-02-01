@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-const BlogTimeline = ({ blogs}) => {
+const BlogTimeline = ({ blogs }) => {
   const processedData = useMemo(() => {
     const grouped = blogs.reduce((acc, blog) => {
       const date = new Date(blog.createdAt);
@@ -85,7 +85,7 @@ const BlogTimeline = ({ blogs}) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex-1 w-full h-full pb-8"
+      className="flex-1 w-full h-full pb-8 dark:bg-gray-900"
     >
       {processedData.map((yearData) => (
         <div key={yearData.year} className="mb-8">
@@ -138,20 +138,24 @@ const BlogTimeline = ({ blogs}) => {
                           key={`${monthData.yearMonth}-${index}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                          className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between items-center"
                         >
-                          <span className="mr-4 text-gray-400 dark:text-gray-500">
-                            {article.day}
-                          </span>
-                          <span className="text-gray-700 dark:text-gray-300">
-                            -
-                            <Link
-                              to={`/post/${article.slug}`}
-                              className="items-center hover:underline"
-                            >
-                              <span className="ml-2">{article.title}</span>
-                            </Link>
-                          </span>
+                          <div className="flex items-center">
+                            <span className="mr-4 text-gray-400 dark:text-gray-400">
+                              {article.day}
+                            </span>
+                            <span className="text-gray-700 dark:text-gray-200">
+                              -
+                              <Link
+                                to={`/post/${article.slug}`}
+                                className="items-center hover:underline"
+                              >
+                                <span className="ml-2 dark:text-gray-300">
+                                  {article.title}
+                                </span>
+                              </Link>
+                            </span>
+                          </div>
                         </motion.div>
                       ))}
                     </div>

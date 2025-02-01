@@ -24,7 +24,7 @@ export default function Calendar({ isDark }) {
       <div
         key={day}
         className={`flex items-center justify-center w-8 h-8 mx-auto ${
-          isToday ? "ring-2 ring-blue-500 rounded-full font-semibold" : ""
+          isToday ? "ring-2 ring-gray-400 dark:ring-gray-500 rounded-full font-semibold" : ""
         }`}
       >
         {day}

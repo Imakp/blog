@@ -63,7 +63,7 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
       return;
     }
 
-    debugContent(content); 
+    debugContent(content);
 
     const postData = {
       title,
@@ -127,7 +127,7 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             placeholder="Enter blog title"
           />
         </div>
@@ -137,7 +137,7 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
           <textarea
             value={metaDescription}
             onChange={(e) => setMetaDescription(e.target.value)}
-            className="w-full p-2 border rounded h-24 focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border rounded h-24 focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             placeholder="Enter meta description for SEO"
           />
         </div>
@@ -148,7 +148,7 @@ const BlogForm = ({ setServerBlogs, refreshBlogs }) => {
             type="text"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             placeholder="Comma-separated keywords (e.g., tech, web development)"
           />
         </div>

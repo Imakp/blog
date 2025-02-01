@@ -36,7 +36,7 @@ export default function SocialLinks() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md"
+      className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-md dark:shadow-gray-900/50"
     >
       <div className="flex justify-center gap-4">
         {socials.map((social) => (
