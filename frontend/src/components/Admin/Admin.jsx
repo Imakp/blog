@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import Navbar from "../Common/Navbar";
 import AboutMe from "../Common/AboutMe";
 import BlogTimeline from "./Sections/AdminBlogTimeline";
@@ -12,9 +13,17 @@ import SEO from "../Common/SEO";
 import BlogForm from "./Sections/BlogForm";
 import { Link } from "react-router-dom";
 import ResponsiveBlogLayout from "../Common/ResponsiveBlogLayout";
+import { LogOut, Plus } from "lucide-react";
 
 const Admin = ({ isDark, setIsDark }) => {
   const [serverBlogs, setServerBlogs] = useState([]);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+  };
 
   const fetchBlogs = async () => {
     try {
@@ -62,26 +71,23 @@ const Admin = ({ isDark, setIsDark }) => {
               )}
             />
 
-            <Link
-              to="/admin/write"
-              className="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50"
-              aria-label="Create new post"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
+              <Link
+                to="/admin/write"
+                className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                aria-label="Create new post"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </Link>
+                <Plus className="h-6 w-6" />
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                aria-label="Logout"
+              >
+                <LogOut className="h-6 w-6" />
+              </button>
+            </div>
           </>
         }
       />

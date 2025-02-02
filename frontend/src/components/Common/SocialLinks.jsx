@@ -10,22 +10,22 @@ import {
 const socials = [
   {
     name: "GitHub",
-    url: "https://github.com/ankit",
+    url: "https://github.com/Imakp",
     icon: faGithub,
   },
   {
     name: "LinkedIn",
-    url: "https://linkedin.com/in/ankit",
+    url: "https://www.linkedin.com/in/ankitkumarpandit/",
     icon: faLinkedin,
   },
   {
     name: "Twitter",
-    url: "https://twitter.com/ankit",
+    url: "https://x.com/_ankitkrpandit_",
     icon: faTwitter,
   },
   {
     name: "YouTube",
-    url: "https://youtube.com/@ankit",
+    url: "https://www.youtube.com/@ankit.kr.pandit",
     icon: faYoutube,
   },
 ];

@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -55,11 +55,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = (navigate) => {
+  const logout = (navigate, path = "/login") => {
     localStorage.removeItem("token");
     setUser(null);
     if (navigate) {
-      navigate("/login");
+      navigate(path);
     }
   };
 

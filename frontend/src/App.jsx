@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { motion } from "framer-motion";
 import Blog from "./components/Blog/Blog";
 import { HelmetProvider } from "react-helmet-async";
 import AdminPanel from "./components/Admin/Admin";
 import { AuthProvider } from "./context/AuthContext";
 import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Loader from "./components/Loader";
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -16,6 +16,15 @@ export default function App() {
     }
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (isDark) {
@@ -43,21 +52,27 @@ export default function App() {
     <HelmetProvider>
       <Router>
         <AuthProvider>
-          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/*"
-                element={<Blog isDark={isDark} setIsDark={setIsDark} />}
-              />
-              <Route element={<ProtectedRoute />}>
+          {isLoading ? (
+            <Loader />
+          ) : (
+            <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+              <Routes>
+                <Route path="/login" element={<Login />} />
                 <Route
-                  path="/admin/*"
-                  element={<AdminPanel isDark={isDark} setIsDark={setIsDark} />}
+                  path="/*"
+                  element={<Blog isDark={isDark} setIsDark={setIsDark} />}
                 />
-              </Route>
-            </Routes>
-          </div>
+                <Route element={<ProtectedRoute />}>
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <AdminPanel isDark={isDark} setIsDark={setIsDark} />
+                    }
+                  />
+                </Route>
+              </Routes>
+            </div>
+          )}
         </AuthProvider>
       </Router>
     </HelmetProvider>

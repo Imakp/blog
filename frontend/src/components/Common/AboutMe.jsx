@@ -10,9 +10,9 @@ export default function AboutMe() {
     >
       <h2 className="text-xl font-semibold mb-4">About Me</h2>
       <p className="leading-relaxed dark:text-gray-300">
-        Frontend architect passionate about reactive frameworks and modern web
-        experiences. Building the future of web development with Solid.js and
-        TypeScript. Open source contributor and tech educator.
+        CSE'25 @ PESCE | Intern @TEN | Passionate about building Al agents,
+        currently focused on creating innovative Al solutions. Active hackathon
+        participant with a drive for impactful projects.
       </p>
     </motion.div>
   );
