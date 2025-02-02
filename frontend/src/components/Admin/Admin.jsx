@@ -18,7 +18,10 @@ const Admin = ({ isDark, setIsDark }) => {
 
   const fetchBlogs = async () => {
     try {
-      const response = await fetch("/api/blogs?includeHidden=true");
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/blogs?includeHidden=true", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
       setServerBlogs(data.blogs || []);
     } catch (error) {

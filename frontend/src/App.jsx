@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import Blog from "./components/Blog/Blog";
 import { HelmetProvider } from "react-helmet-async";
 import AdminPanel from "./components/Admin/Admin";
+import { AuthProvider } from "./context/AuthContext";
+import Login from "./components/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -39,18 +42,23 @@ export default function App() {
   return (
     <HelmetProvider>
       <Router>
-        <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-          <Routes>
-            <Route
-              path="/*"
-              element={<Blog isDark={isDark} setIsDark={setIsDark} />}
-            />
-            <Route
-              path="/admin/*"
-              element={<AdminPanel isDark={isDark} setIsDark={setIsDark} />}
-            />
-          </Routes>
-        </div>
+        <AuthProvider>
+          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/*"
+                element={<Blog isDark={isDark} setIsDark={setIsDark} />}
+              />
+              <Route element={<ProtectedRoute />}>
+                <Route
+                  path="/admin/*"
+                  element={<AdminPanel isDark={isDark} setIsDark={setIsDark} />}
+                />
+              </Route>
+            </Routes>
+          </div>
+        </AuthProvider>
       </Router>
     </HelmetProvider>
   );
