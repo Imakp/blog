@@ -4,6 +4,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
         }
       }
+      setLoading(false);
     };
 
     checkAuth();
@@ -60,6 +62,10 @@ export const AuthProvider = ({ children }) => {
       navigate("/login");
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

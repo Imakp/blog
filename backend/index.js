@@ -10,20 +10,22 @@ const app = express();
 const authRoutes = require("./routes/authRoutes");
 require("dotenv").config();
 
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// app.use(cors());
 app.use(express.json());
 
 connectDB();
 
 app.use("/api/blogs", blogRoutes);
 app.use("/api/auth", authRoutes);
-
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
-  });
-}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -34,3 +34,12 @@ exports.loginUser = asyncHandler(async (req, res) => {
     token: generateToken(user._id),
   });
 });
+
+exports.getProfile = asyncHandler(async (req, res) => {
+  res.json({
+    _id: req.user._id,
+    username: req.user.username,
+    email: req.user.email,
+    role: req.user.role,
+  });
+});
