@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Editor from "./Editor";
 import { useSearchParams } from "react-router-dom";
+import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
 const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
   const [searchParams] = useSearchParams();
@@ -9,6 +10,8 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
   const [metaDescription, setMetaDescription] = useState("");
   const [keywords, setKeywords] = useState("");
   const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
     if (editSlug) {
@@ -34,12 +37,14 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
   };
 
   const handlePublish = async () => {
+    setStatusMessage({ type: "", text: "" });
     if (!title || !metaDescription || !keywords || !content) {
-      alert("All fields are required!");
+      setStatusMessage({ type: "error", text: "All fields are required!" });
       return;
     }
 
     debugContent(content);
+    setLoading(true);
 
     const postData = {
       title,
@@ -49,32 +54,36 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
     };
 
     try {
+      let response;
       if (editSlug) {
-        const response = await fetch(`/api/blogs/${editSlug}`, {
+        response = await fetch(`/api/blogs/${editSlug}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(postData),
         });
-
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-
-        alert("Updated successfully!");
-        refreshBlogs();
-        window.history.replaceState(null, "", "/write");
       } else {
-        const response = await fetch("/api/blogs", {
+        response = await fetch("/api/blogs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(postData),
         });
+      }
 
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorData}`
+        );
+      }
 
+      if (editSlug) {
+        setStatusMessage({ type: "success", text: "Updated successfully!" });
+        refreshBlogs();
+        window.history.replaceState(null, "", "/write");
+      } else {
         const savedPost = await response.json();
         setServerBlogs((prev) => [savedPost, ...prev]);
-        alert("Published successfully!");
+        setStatusMessage({ type: "success", text: "Published successfully!" });
       }
 
       setTitle("");
@@ -83,7 +92,14 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
       setContent("");
     } catch (error) {
       console.error(editSlug ? "Update error:" : "Publish error:", error);
-      alert(`Failed to ${editSlug ? "update" : "publish"} post.`);
+      setStatusMessage({
+        type: "error",
+        text: `Failed to ${editSlug ? "update" : "publish"} post. ${
+          error.message
+        }`,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -137,13 +153,41 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
           />
         </div>
 
-        <div className="flex gap-4 pt-4">
+        <div className="flex items-center gap-4 pt-4">
           <button
             onClick={handlePublish}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+            disabled={loading}
+            className={`px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2 ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
-            {editSlug ? "Update Post" : "Publish Post"}
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin w-4 h-4" />
+                {editSlug ? "Updating..." : "Publishing..."}
+              </>
+            ) : editSlug ? (
+              "Update Post"
+            ) : (
+              "Publish Post"
+            )}
           </button>
+          {statusMessage.text && (
+            <div
+              className={`flex items-center gap-1 text-sm ${
+                statusMessage.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {statusMessage.type === "success" ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                <XCircle className="w-4 h-4" />
+              )}
+              <span>{statusMessage.text}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import SEO from "./SEO";
@@ -7,6 +7,7 @@ const PostView = () => {
   const { "*": slug } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
+  const contentRef = useRef(null);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -22,6 +23,41 @@ const PostView = () => {
     };
     fetchPost();
   }, [slug]);
+
+  useEffect(() => {
+    const loadTwitterWidgets = () => {
+      if (window.twttr && typeof window.twttr.widgets?.load === "function") {
+        if (contentRef.current) {
+          window.twttr.widgets.load(contentRef.current);
+        }
+      } else if (
+        !document.querySelector(
+          'script[src="https://platform.twitter.com/widgets.js"]'
+        )
+      ) {
+        const script = document.createElement("script");
+        script.src = "https://platform.twitter.com/widgets.js";
+        script.async = true;
+        script.charset = "utf-8";
+        script.onload = () => {
+          if (
+            window.twttr &&
+            typeof window.twttr.widgets?.load === "function" &&
+            contentRef.current
+          ) {
+            window.twttr.widgets.load(contentRef.current);
+          }
+        };
+        document.body.appendChild(script);
+      }
+    };
+
+    if (post?.content && contentRef.current) {
+      if (post.content.includes("data-tweet-url")) {
+        loadTwitterWidgets();
+      }
+    }
+  }, [post?.content]);
 
   if (!post)
     return (
@@ -56,6 +92,7 @@ const PostView = () => {
           Posted on {new Date(post.createdAt).toLocaleDateString()}
         </div>
         <div
+          ref={contentRef}
           className="overflow-x-auto"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />

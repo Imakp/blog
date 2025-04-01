@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, BubbleMenu } from "@tiptap/react";
+
+import { Node } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -18,16 +20,12 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Placeholder from "@tiptap/extension-placeholder";
 import BulletList from "@tiptap/extension-bullet-list";
-import Collaboration from "@tiptap/extension-collaboration";
+import History from "@tiptap/extension-history";
 import Heading from "@tiptap/extension-heading";
-import Mention from "@tiptap/extension-mention";
 import OrderedList from "@tiptap/extension-ordered-list";
 import Youtube from "@tiptap/extension-youtube";
 import { Markdown } from "tiptap-markdown";
-import * as Y from "yjs";
 import { jsPDF } from "jspdf";
-import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
 
 import {
   Bold,
@@ -40,11 +38,10 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Code,
+  Code as CodeIcon,
   Table as TableIcon,
   Sun,
   Moon,
-  Save,
   FileDown,
   CheckSquare,
   Heading1,
@@ -55,28 +52,22 @@ import {
   RotateCcw,
   RotateCw,
   X,
-  ChevronDown,
   Youtube as YoutubeIcon,
-  User,
-  FilePlus,
+  Twitter,
 } from "lucide-react";
 
 const Editor = ({
   isDark,
   setIsDark,
-  setServerBlogs,
-  showPublishButton = true,
+
   onContentChange,
-  value = "", 
+  value = "",
 }) => {
-  const navigate = useNavigate();
   const [selectedColor, setSelectedColor] = useState("#000000");
-  const [saveStatus, setSaveStatus] = useState("");
+  const [autoSaveStatus, setAutoSaveStatus] = useState("");
   const [showToolbar, setShowToolbar] = useState(true);
   const [wordCount, setWordCount] = useState(0);
-  const ydoc = new Y.Doc();
-
-  const [isNewPost, setIsNewPost] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   const updateWordCount = useCallback((editor) => {
     const text = editor.state.doc.textContent;
@@ -87,6 +78,84 @@ const Editor = ({
     setWordCount(words.length);
   }, []);
 
+  const TwitterEmbed = Node.create({
+    name: "twitterEmbed",
+    group: "block",
+    atom: true,
+
+    addAttributes() {
+      return {
+        url: {
+          default: null,
+          parseHTML: (element) => element.getAttribute("data-tweet-url"),
+          renderHTML: (attributes) => {
+            if (!attributes.url) {
+              return {};
+            }
+            return { "data-tweet-url": attributes.url };
+          },
+        },
+      };
+    },
+
+    parseHTML() {
+      return [{ tag: "div[data-tweet-url]" }];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+      return ["div", HTMLAttributes, 0];
+    },
+
+    addNodeView() {
+      return ({ node, getPos, editor }) => {
+        const { url } = node.attrs;
+        const dom = document.createElement("div");
+        dom.setAttribute("data-tweet-url", url);
+        dom.style.border = "1px solid #ccc";
+        dom.style.padding = "10px";
+        dom.style.margin = "10px 0";
+        dom.style.borderRadius = "4px";
+        dom.style.backgroundColor = "#f0f0f0";
+        dom.style.color = "#333";
+        dom.textContent = `[Twitter Post: ${url || "No URL provided"}]`;
+        dom.contentEditable = "false";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "X";
+        deleteButton.style.marginLeft = "10px";
+        deleteButton.style.cursor = "pointer";
+        deleteButton.style.border = "none";
+        deleteButton.style.background = "red";
+        deleteButton.style.color = "white";
+        deleteButton.style.borderRadius = "3px";
+        deleteButton.style.padding = "2px 5px";
+        deleteButton.onclick = () => {
+          if (typeof getPos === "function") {
+            editor.view.dispatch(
+              editor.view.state.tr.delete(getPos(), getPos() + node.nodeSize)
+            );
+          }
+        };
+        dom.appendChild(deleteButton);
+
+        return { dom };
+      };
+    },
+
+    addCommands() {
+      return {
+        setTwitterEmbed:
+          (options) =>
+          ({ commands }) => {
+            return commands.insertContent({
+              type: this.name,
+              attrs: options,
+            });
+          },
+      };
+    },
+  });
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -96,9 +165,8 @@ const Editor = ({
         heading: false,
         codeBlock: false,
       }),
-      Collaboration.configure({
-        document: ydoc,
-      }),
+
+      History,
       BulletList.configure({
         HTMLAttributes: { class: "pl-6 list-disc" },
       }),
@@ -108,44 +176,53 @@ const Editor = ({
       Heading.configure({
         levels: [1, 2, 3],
       }),
-      Mention.configure({
-        HTMLAttributes: {
-          class: "mention bg-blue-100 px-1 rounded cursor-pointer",
-        },
-        suggestion: {
-          items: ({ query }) => {
-            return ["user1", "user2", "user3"].filter((item) =>
-              item.includes(query)
-            );
-          },
-          render: () => ({
-            onStart: (props) => {
-              props.reference.classList.add("mention-active");
-            },
-            onUpdate(props) {
-              props.reference.classList.add("mention-active");
-            },
-            onExit() {},
-            onKeyDown(props) {
-              return false;
-            },
-          }),
-        },
-      }),
       Youtube.configure({
         inline: false,
         controls: true,
         HTMLAttributes: {
           class: "w-full aspect-video rounded-lg my-4 dark:brightness-90",
         },
+        addPasteRules: false,
+        parseHTML() {
+          return [
+            {
+              tag: "div[data-youtube-video] iframe",
+              getAttrs: (domNode) => {
+                const iframe =
+                  domNode instanceof HTMLIFrameElement
+                    ? domNode
+                    : domNode.querySelector("iframe");
+                if (
+                  (iframe && iframe.src.includes("youtube.com")) ||
+                  iframe?.src.includes("youtu.be")
+                ) {
+                  return { src: iframe.src };
+                }
+                return false;
+              },
+            },
+            {
+              tag: 'iframe[src*="youtube.com"], iframe[src*="youtu.be"]',
+              getAttrs: (domNode) => {
+                if (domNode instanceof HTMLIFrameElement) {
+                  return { src: domNode.src };
+                }
+                return false;
+              },
+            },
+          ];
+        },
       }),
-      Markdown,
+
       Image.configure({
         HTMLAttributes: { class: "rounded-lg my-4 shadow-md max-w-full" },
         inline: true,
+        allowBase64: true,
       }),
       Link.configure({
         openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
         HTMLAttributes: {
           class:
             "text-blue-600 hover:text-blue-800 underline transition-colors",
@@ -160,7 +237,10 @@ const Editor = ({
       Color,
       TextStyle,
       CodeBlock.configure({
-        HTMLAttributes: { class: "bg-gray-800 text-gray-100 p-4 rounded-lg" },
+        HTMLAttributes: {
+          class:
+            "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100 text-sm p-4 rounded-lg my-2 overflow-x-auto",
+        },
       }),
       TaskList,
       TaskItem.configure({ nested: true }),
@@ -184,6 +264,8 @@ const Editor = ({
       Placeholder.configure({
         placeholder: "Begin writing your story...",
       }),
+      Markdown,
+      TwitterEmbed,
     ],
     content: value,
     autofocus: true,
@@ -217,6 +299,13 @@ const Editor = ({
     if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
   };
 
+  const addTwitterEmbed = () => {
+    const url = prompt("Enter Tweet URL:");
+    if (url) {
+      editor.chain().focus().setTwitterEmbed({ url }).run();
+    }
+  };
+
   const handleColorChange = (color) => {
     setSelectedColor(color);
     editor.chain().focus().setColor(color).run();
@@ -243,9 +332,9 @@ const Editor = ({
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
         localStorage.setItem("blog-content", editor.getHTML());
-        setSaveStatus("Saved");
-        setTimeout(() => setSaveStatus(""), 2000);
-        if (onContentChange) onContentChange(editor.getHTML()); 
+        setAutoSaveStatus("Autosaved");
+        setTimeout(() => setAutoSaveStatus(""), 2000);
+        if (onContentChange) onContentChange(editor.getHTML());
       }, 1000);
     };
 
@@ -255,6 +344,10 @@ const Editor = ({
       clearTimeout(saveTimeout);
     };
   }, [editor, onContentChange]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   if (!editor) return null;
 
@@ -286,211 +379,201 @@ const Editor = ({
     </div>
   );
 
-  const handleNewPost = () => {
-    setIsNewPost(true);
-    editor.commands.clearContent();
-    localStorage.removeItem("blog-content");
-  };
-
-  const handlePublish = async () => {
-    const title = prompt("Enter post title:");
-    const metaDescription = prompt("Enter meta description:");
-    const keywords = prompt("Enter comma-separated keywords:");
-
-    if (!title || !metaDescription || !keywords) {
-      return alert("All SEO fields are required!");
-    }
-
-    const newPost = {
-      title,
-      content: editor.getHTML(),
-      metaDescription,
-      keywords: keywords.split(",").map((k) => k.trim()),
-    };
-
-    try {
-      const response = await fetch("/api/blogs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPost),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const savedPost = await response.json();
-      setServerBlogs((prev) => [savedPost, ...prev.blogs]);
-
-      localStorage.removeItem("blog-content");
-      editor.commands.clearContent();
-      setIsNewPost(true);
-
-      navigate(`/post/${savedPost.slug}`);
-    } catch (error) {
-      console.error("Error saving post:", error);
-      alert("Failed to save post. Check console for details.");
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`h-[80vh] flex flex-col rounded-xl shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
+      className={`min-h-[400px] h-full flex flex-col rounded-xl shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden`}
     >
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        onClick={() => setShowToolbar(!showToolbar)}
-        className="absolute top-2 right-2 z-30 p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 
-                   hover:bg-gray-200 dark:hover:bg-gray-700 shadow-md"
-      >
-        {showToolbar ? (
-          <X className="w-4 h-4" />
-        ) : (
-          <Palette className="w-4 h-4" />
-        )}
-      </motion.button>
-
       <AnimatePresence>
         {showToolbar && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="sticky top-0 z-30 p-2 backdrop-blur-md bg-white/90 dark:bg-gray-900/90 
+            className="flex-shrink-0 p-2 backdrop-blur-md bg-white/90 dark:bg-gray-900/90
                      border-b border-gray-200 dark:border-gray-700 shadow-sm"
           >
-            <div className="flex flex-wrap gap-2 justify-center">
-              <ToolbarGroup>
-                <MenuButton
-                  onClick={() => editor.chain().focus().toggleBold().run()}
-                  active={editor.isActive("bold")}
-                  icon={Bold}
-                  tooltip="Bold (⌘B)"
-                />
-                <MenuButton
-                  onClick={() => editor.chain().focus().toggleItalic().run()}
-                  active={editor.isActive("italic")}
-                  icon={Italic}
-                  tooltip="Italic (⌘I)"
-                />
-                <MenuButton
-                  onClick={() => editor.chain().focus().toggleUnderline().run()}
-                  active={editor.isActive("underline")}
-                  icon={UnderlineIcon}
-                  tooltip="Underline (⌘U)"
-                />
-              </ToolbarGroup>
-              <ToolbarGroup>
-                {[1, 2, 3].map((level) => (
-                  <MenuButton
-                    key={level}
-                    onClick={() =>
-                      editor.chain().focus().toggleHeading({ level }).run()
-                    }
-                    active={editor.isActive("heading", { level })}
-                    icon={[Heading1, Heading2, Heading3][level - 1]}
-                    tooltip={`Heading ${level}`}
-                  />
-                ))}
-              </ToolbarGroup>
-              <ToolbarGroup>
-                <MenuButton
-                  onClick={() =>
-                    editor.chain().focus().toggleBulletList().run()
-                  }
-                  active={editor.isActive("bulletList")}
-                  icon={List}
-                  tooltip="Bullet List"
-                />
-                <MenuButton
-                  onClick={() =>
-                    editor.chain().focus().toggleOrderedList().run()
-                  }
-                  active={editor.isActive("orderedList")}
-                  icon={ListOrdered}
-                  tooltip="Numbered List"
-                />
-                <MenuButton
-                  onClick={() => editor.chain().focus().toggleTaskList().run()}
-                  active={editor.isActive("taskList")}
-                  icon={CheckSquare}
-                  tooltip="Task List"
-                />
-              </ToolbarGroup>
-              <ToolbarGroup>
-                <MenuButton
-                  onClick={addImage}
-                  icon={ImageIcon}
-                  tooltip="Insert Image"
-                />
-                <MenuButton
-                  onClick={addLink}
-                  active={editor.isActive("link")}
-                  icon={LinkIcon}
-                  tooltip="Insert Link"
-                />
-                <MenuButton
-                  onClick={addTable}
-                  icon={TableIcon}
-                  tooltip="Insert Table"
-                />
-                <MenuButton
-                  onClick={addYoutubeVideo}
-                  icon={YoutubeIcon}
-                  tooltip="Insert YouTube Video"
-                />
-              </ToolbarGroup>
-              <ToolbarGroup>
-                <input
-                  type="color"
-                  value={selectedColor}
-                  onChange={(e) => handleColorChange(e.target.value)}
-                  className="w-6 h-6 rounded cursor-pointer border border-gray-200 dark:border-gray-600 dark:bg-gray-800"
-                  title="Text Color"
-                />
-                <MenuButton
-                  onClick={() => editor.chain().focus().toggleHighlight().run()}
-                  active={editor.isActive("highlight")}
-                  icon={Highlighter}
-                  tooltip="Highlight Text"
-                />
-              </ToolbarGroup>
-              <ToolbarGroup>
-                {showPublishButton && (
-                  <MenuButton
-                    onClick={handlePublish}
-                    active={false}
-                    icon={Save}
-                    tooltip="Publish Post"
-                  />
+            <div className="flex flex-wrap gap-2 justify-center items-center">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick={() => setShowToolbar(!showToolbar)}
+                className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 mr-2"
+                title={showToolbar ? "Hide Toolbar" : "Show Toolbar"}
+              >
+                {showToolbar ? (
+                  <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                ) : (
+                  <Palette className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                 )}
-                <MenuButton
-                  onClick={exportToPDF}
-                  icon={FileDown}
-                  tooltip="Export to PDF"
-                />
-              </ToolbarGroup>
-              <ToolbarGroup>
-                <MenuButton
-                  onClick={() => editor.chain().focus().undo().run()}
-                  icon={RotateCcw}
-                  tooltip="Undo"
-                />
-                <MenuButton
-                  onClick={() => editor.chain().focus().redo().run()}
-                  icon={RotateCw}
-                  tooltip="Redo"
-                />
-                <MenuButton
-                  onClick={handleNewPost}
-                  icon={FilePlus}
-                  tooltip="New Post"
-                />
-              </ToolbarGroup>
+              </motion.button>
+              {showToolbar && (
+                <>
+                  <ToolbarGroup>
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().setTextAlign("left").run()
+                      }
+                      active={editor.isActive({ textAlign: "left" })}
+                      icon={AlignLeft}
+                      tooltip="Align Left"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().setTextAlign("center").run()
+                      }
+                      active={editor.isActive({ textAlign: "center" })}
+                      icon={AlignCenter}
+                      tooltip="Align Center"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().setTextAlign("right").run()
+                      }
+                      active={editor.isActive({ textAlign: "right" })}
+                      icon={AlignRight}
+                      tooltip="Align Right"
+                    />
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    <MenuButton
+                      onClick={() => editor.chain().focus().toggleBold().run()}
+                      active={editor.isActive("bold")}
+                      icon={Bold}
+                      tooltip="Bold (⌘B)"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().toggleItalic().run()
+                      }
+                      active={editor.isActive("italic")}
+                      icon={Italic}
+                      tooltip="Italic (⌘I)"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().toggleUnderline().run()
+                      }
+                      active={editor.isActive("underline")}
+                      icon={UnderlineIcon}
+                      tooltip="Underline (⌘U)"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().toggleCodeBlock().run()
+                      }
+                      active={editor.isActive("codeBlock")}
+                      icon={CodeIcon}
+                      tooltip="Code Block"
+                    />
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    {[1, 2, 3].map((level) => (
+                      <MenuButton
+                        key={level}
+                        onClick={() =>
+                          editor.chain().focus().toggleHeading({ level }).run()
+                        }
+                        active={editor.isActive("heading", { level })}
+                        icon={[Heading1, Heading2, Heading3][level - 1]}
+                        tooltip={`Heading ${level}`}
+                      />
+                    ))}
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().toggleBulletList().run()
+                      }
+                      active={editor.isActive("bulletList")}
+                      icon={List}
+                      tooltip="Bullet List"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().toggleOrderedList().run()
+                      }
+                      active={editor.isActive("orderedList")}
+                      icon={ListOrdered}
+                      tooltip="Numbered List"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().toggleTaskList().run()
+                      }
+                      active={editor.isActive("taskList")}
+                      icon={CheckSquare}
+                      tooltip="Task List"
+                    />
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    <MenuButton
+                      onClick={addImage}
+                      icon={ImageIcon}
+                      tooltip="Insert Image"
+                    />
+                    <MenuButton
+                      onClick={addLink}
+                      active={editor.isActive("link")}
+                      icon={LinkIcon}
+                      tooltip="Insert Link"
+                    />
+                    <MenuButton
+                      onClick={addTable}
+                      icon={TableIcon}
+                      tooltip="Insert Table"
+                    />
+                    <MenuButton
+                      onClick={addYoutubeVideo}
+                      icon={YoutubeIcon}
+                      tooltip="Insert YouTube Video"
+                    />
+                    <MenuButton
+                      onClick={addTwitterEmbed}
+                      icon={Twitter}
+                      tooltip="Embed Tweet"
+                    />
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    <input
+                      type="color"
+                      value={selectedColor}
+                      onChange={(e) => handleColorChange(e.target.value)}
+                      className="w-6 h-6 rounded cursor-pointer border border-gray-200 dark:border-gray-600 dark:bg-gray-800"
+                      title="Text Color"
+                    />
+                    <MenuButton
+                      onClick={() =>
+                        editor.chain().focus().toggleHighlight().run()
+                      }
+                      active={editor.isActive("highlight")}
+                      icon={Highlighter}
+                      tooltip="Highlight Text"
+                    />
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    <MenuButton
+                      onClick={exportToPDF}
+                      icon={FileDown}
+                      tooltip="Export to PDF"
+                    />
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    <MenuButton
+                      onClick={() => editor.chain().focus().undo().run()}
+                      icon={RotateCcw}
+                      tooltip="Undo"
+                    />
+                    <MenuButton
+                      onClick={() => editor.chain().focus().redo().run()}
+                      icon={RotateCw}
+                      tooltip="Redo"
+                    />
+                  </ToolbarGroup>
+                </>
+              )}
             </div>
           </motion.div>
         )}
@@ -501,34 +584,33 @@ const Editor = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex-1 overflow-y-auto"
+          className=""
         >
           <EditorContent
             editor={editor}
-            className={`prose prose-headings:text-left prose-lg max-w-none 
-              px-6 py-4 mx-auto leading-relaxed pt-[76px] pb-16
+            className={`prose prose-headings:text-left prose-lg max-w-none
+              px-6 py-4 mx-auto leading-relaxed pb-16
               prose-table:border-collapse prose-td:p-2 prose-th:p-2
               prose-table:border prose-table:border-gray-200 dark:prose-table:border-gray-600
-              prose-code:before:content-none prose-code:after:content-none
               ${isDark ? "dark:prose-invert" : ""}`}
           />
         </motion.div>
       </div>
 
       <div
-        className="sticky bottom-0 z-20 px-4 py-2 border-t border-gray-200 dark:border-gray-700 
+        className="flex-shrink-0 px-4 py-2 border-t border-gray-200 dark:border-gray-700
                   flex justify-between items-center text-sm text-gray-500 dark:text-gray-400
                   backdrop-blur-md bg-white/90 dark:bg-gray-900/90"
       >
         <div>{wordCount} words</div>
         <AnimatePresence>
-          {saveStatus && (
+          {autoSaveStatus && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {saveStatus}
+              {autoSaveStatus}
             </motion.div>
           )}
         </AnimatePresence>
