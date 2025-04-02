@@ -24,41 +24,6 @@ const PostView = () => {
     fetchPost();
   }, [slug]);
 
-  useEffect(() => {
-    const loadTwitterWidgets = () => {
-      if (window.twttr && typeof window.twttr.widgets?.load === "function") {
-        if (contentRef.current) {
-          window.twttr.widgets.load(contentRef.current);
-        }
-      } else if (
-        !document.querySelector(
-          'script[src="https://platform.twitter.com/widgets.js"]'
-        )
-      ) {
-        const script = document.createElement("script");
-        script.src = "https://platform.twitter.com/widgets.js";
-        script.async = true;
-        script.charset = "utf-8";
-        script.onload = () => {
-          if (
-            window.twttr &&
-            typeof window.twttr.widgets?.load === "function" &&
-            contentRef.current
-          ) {
-            window.twttr.widgets.load(contentRef.current);
-          }
-        };
-        document.body.appendChild(script);
-      }
-    };
-
-    if (post?.content && contentRef.current) {
-      if (post.content.includes("data-tweet-url")) {
-        loadTwitterWidgets();
-      }
-    }
-  }, [post?.content]);
-
   if (!post)
     return (
       <div className="p-4 md:p-8 text-gray-600 dark:text-gray-400 text-sm md:text-base">

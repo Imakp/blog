@@ -5,14 +5,11 @@ import { Node } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
-import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
 import Color from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
 import CodeBlock from "@tiptap/extension-code-block";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
 import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
@@ -24,34 +21,24 @@ import Heading from "@tiptap/extension-heading";
 import OrderedList from "@tiptap/extension-ordered-list";
 import Youtube from "@tiptap/extension-youtube";
 import { Markdown } from "tiptap-markdown";
-
 import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  List,
-  ListOrdered,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Code as CodeIcon,
-  Table as TableIcon,
-  Sun,
-  Moon,
-  CheckSquare,
-  Heading1,
-  Heading2,
-  Heading3,
-  Palette,
-  Highlighter,
-  RotateCcw,
-  RotateCw,
-  X,
-  Youtube as YoutubeIcon,
-  Twitter,
-} from "lucide-react";
+  FaBold,
+  FaItalic,
+  FaUnderline,
+  FaListUl,
+  FaListOl,
+  FaImage,
+  FaLink,
+  FaCode,
+  FaTable,
+  FaSun,
+  FaMoon,
+  FaHighlighter,
+  FaUndo,
+  FaRedo,
+  FaYoutube,
+} from "react-icons/fa";
+import { Heading1, Heading2, Heading3 } from "lucide-react";
 
 const Editor = ({
   isDark,
@@ -74,84 +61,6 @@ const Editor = ({
       .filter((word) => word.length > 0);
     setWordCount(words.length);
   }, []);
-
-  const TwitterEmbed = Node.create({
-    name: "twitterEmbed",
-    group: "block",
-    atom: true,
-
-    addAttributes() {
-      return {
-        url: {
-          default: null,
-          parseHTML: (element) => element.getAttribute("data-tweet-url"),
-          renderHTML: (attributes) => {
-            if (!attributes.url) {
-              return {};
-            }
-            return { "data-tweet-url": attributes.url };
-          },
-        },
-      };
-    },
-
-    parseHTML() {
-      return [{ tag: "div[data-tweet-url]" }];
-    },
-
-    renderHTML({ HTMLAttributes }) {
-      return ["div", HTMLAttributes, 0];
-    },
-
-    addNodeView() {
-      return ({ node, getPos, editor }) => {
-        const { url } = node.attrs;
-        const dom = document.createElement("div");
-        dom.setAttribute("data-tweet-url", url);
-        dom.style.border = "1px solid #ccc";
-        dom.style.padding = "10px";
-        dom.style.margin = "10px 0";
-        dom.style.borderRadius = "4px";
-        dom.style.backgroundColor = "#f0f0f0";
-        dom.style.color = "#333";
-        dom.textContent = `[Twitter Post: ${url || "No URL provided"}]`;
-        dom.contentEditable = "false";
-
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "X";
-        deleteButton.style.marginLeft = "10px";
-        deleteButton.style.cursor = "pointer";
-        deleteButton.style.border = "none";
-        deleteButton.style.background = "red";
-        deleteButton.style.color = "white";
-        deleteButton.style.borderRadius = "3px";
-        deleteButton.style.padding = "2px 5px";
-        deleteButton.onclick = () => {
-          if (typeof getPos === "function") {
-            editor.view.dispatch(
-              editor.view.state.tr.delete(getPos(), getPos() + node.nodeSize)
-            );
-          }
-        };
-        dom.appendChild(deleteButton);
-
-        return { dom };
-      };
-    },
-
-    addCommands() {
-      return {
-        setTwitterEmbed:
-          (options) =>
-          ({ commands }) => {
-            return commands.insertContent({
-              type: this.name,
-              attrs: options,
-            });
-          },
-      };
-    },
-  });
 
   const editor = useEditor({
     extensions: [
@@ -235,10 +144,6 @@ const Editor = ({
             "text-blue-600 hover:text-blue-800 underline transition-colors",
         },
       }),
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-        alignments: ["left", "center", "right"],
-      }),
       Underline,
       Highlight.configure({ multicolor: true }),
       Color,
@@ -249,8 +154,6 @@ const Editor = ({
             "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100 text-sm p-4 rounded-lg my-2 overflow-x-auto",
         },
       }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -272,7 +175,6 @@ const Editor = ({
         placeholder: "Begin writing your story...",
       }),
       Markdown,
-      TwitterEmbed,
     ],
     content: value,
     autofocus: true,
@@ -304,13 +206,6 @@ const Editor = ({
   const addYoutubeVideo = () => {
     const url = prompt("Enter YouTube URL:");
     if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
-  };
-
-  const addTwitterEmbed = () => {
-    const url = prompt("Enter Tweet URL:");
-    if (url) {
-      editor.chain().focus().setTwitterEmbed({ url }).run();
-    }
   };
 
   const handleColorChange = (color) => {
@@ -412,35 +307,9 @@ const Editor = ({
                 <>
                   <ToolbarGroup>
                     <MenuButton
-                      onClick={() =>
-                        editor.chain().focus().setTextAlign("left").run()
-                      }
-                      active={editor.isActive({ textAlign: "left" })}
-                      icon={AlignLeft}
-                      tooltip="Align Left"
-                    />
-                    <MenuButton
-                      onClick={() =>
-                        editor.chain().focus().setTextAlign("center").run()
-                      }
-                      active={editor.isActive({ textAlign: "center" })}
-                      icon={AlignCenter}
-                      tooltip="Align Center"
-                    />
-                    <MenuButton
-                      onClick={() =>
-                        editor.chain().focus().setTextAlign("right").run()
-                      }
-                      active={editor.isActive({ textAlign: "right" })}
-                      icon={AlignRight}
-                      tooltip="Align Right"
-                    />
-                  </ToolbarGroup>
-                  <ToolbarGroup>
-                    <MenuButton
                       onClick={() => editor.chain().focus().toggleBold().run()}
                       active={editor.isActive("bold")}
-                      icon={Bold}
+                      icon={FaBold}
                       tooltip="Bold (⌘B)"
                     />
                     <MenuButton
@@ -448,7 +317,7 @@ const Editor = ({
                         editor.chain().focus().toggleItalic().run()
                       }
                       active={editor.isActive("italic")}
-                      icon={Italic}
+                      icon={FaItalic}
                       tooltip="Italic (⌘I)"
                     />
                     <MenuButton
@@ -456,7 +325,7 @@ const Editor = ({
                         editor.chain().focus().toggleUnderline().run()
                       }
                       active={editor.isActive("underline")}
-                      icon={UnderlineIcon}
+                      icon={FaUnderline}
                       tooltip="Underline (⌘U)"
                     />
                     <MenuButton
@@ -464,7 +333,7 @@ const Editor = ({
                         editor.chain().focus().toggleCodeBlock().run()
                       }
                       active={editor.isActive("codeBlock")}
-                      icon={CodeIcon}
+                      icon={FaCode}
                       tooltip="Code Block"
                     />
                   </ToolbarGroup>
@@ -487,7 +356,7 @@ const Editor = ({
                         editor.chain().focus().toggleBulletList().run()
                       }
                       active={editor.isActive("bulletList")}
-                      icon={List}
+                      icon={FaListUl}
                       tooltip="Bullet List"
                     />
                     <MenuButton
@@ -495,44 +364,31 @@ const Editor = ({
                         editor.chain().focus().toggleOrderedList().run()
                       }
                       active={editor.isActive("orderedList")}
-                      icon={ListOrdered}
+                      icon={FaListOl}
                       tooltip="Numbered List"
-                    />
-                    <MenuButton
-                      onClick={() =>
-                        editor.chain().focus().toggleTaskList().run()
-                      }
-                      active={editor.isActive("taskList")}
-                      icon={CheckSquare}
-                      tooltip="Task List"
                     />
                   </ToolbarGroup>
                   <ToolbarGroup>
                     <MenuButton
                       onClick={addImage}
-                      icon={ImageIcon}
+                      icon={FaImage}
                       tooltip="Insert Image"
                     />
                     <MenuButton
                       onClick={addLink}
                       active={editor.isActive("link")}
-                      icon={LinkIcon}
+                      icon={FaLink}
                       tooltip="Insert Link"
                     />
                     <MenuButton
                       onClick={addTable}
-                      icon={TableIcon}
+                      icon={FaTable}
                       tooltip="Insert Table"
                     />
                     <MenuButton
                       onClick={addYoutubeVideo}
-                      icon={YoutubeIcon}
+                      icon={FaYoutube}
                       tooltip="Insert YouTube Video"
-                    />
-                    <MenuButton
-                      onClick={addTwitterEmbed}
-                      icon={Twitter}
-                      tooltip="Embed Tweet"
                     />
                   </ToolbarGroup>
                   <ToolbarGroup>
@@ -548,22 +404,23 @@ const Editor = ({
                         editor.chain().focus().toggleHighlight().run()
                       }
                       active={editor.isActive("highlight")}
-                      icon={Highlighter}
+                      icon={FaHighlighter}
                       tooltip="Highlight Text"
                     />
                   </ToolbarGroup>
-                  <ToolbarGroup>
+                  {/* Removed ToolbarGroup wrapper for Undo/Redo to remove the divider */}
+                  <div className="flex items-center justify-center gap-1">
                     <MenuButton
                       onClick={() => editor.chain().focus().undo().run()}
-                      icon={RotateCcw}
+                      icon={FaUndo}
                       tooltip="Undo"
                     />
                     <MenuButton
                       onClick={() => editor.chain().focus().redo().run()}
-                      icon={RotateCw}
+                      icon={FaRedo}
                       tooltip="Redo"
                     />
-                  </ToolbarGroup>
+                  </div>
                 </>
               )}
             </div>
@@ -609,7 +466,7 @@ const Editor = ({
         <div className="flex gap-2">
           <MenuButton
             onClick={() => setIsDark(!isDark)}
-            icon={isDark ? Sun : Moon}
+            icon={isDark ? FaSun : FaMoon}
             tooltip="Toggle Theme"
           />
         </div>
