@@ -13,27 +13,54 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
 
+  const processYouTubeEmbeds = (content) => {
+    const youtubeRegex =
+      /<iframe.*?src="(https:\/\/www\.youtube\.com\/embed\/[^"]+)".*?<\/iframe>/g;
+
+    return content.replace(youtubeRegex, (match, src) => {
+      console.log("Found YouTube iframe with src:", src);
+      return `<div data-youtube-video="true"><iframe src="${src}"></iframe></div>`;
+    });
+  };
+
   useEffect(() => {
     if (editSlug) {
       const fetchBlog = async () => {
         try {
           const response = await fetch(`/api/blogs/${editSlug}`);
           const data = await response.json();
+
           setTitle(data.title);
           setMetaDescription(data.metaDescription);
           setKeywords(data.keywords.join(", "));
-          setContent(data.content);
+
+          console.log("Fetched content:", data.content);
+
+          let processedContent = processYouTubeEmbeds(data.content);
+
+          setContent(processedContent);
         } catch (error) {
           console.error("Error fetching blog:", error);
+          setStatusMessage({
+            type: "error",
+            text: "Failed to load blog content",
+          });
         }
       };
       fetchBlog();
     }
   }, [editSlug]);
 
-  const debugContent = (content) => {
-    console.log("Raw content before submit:", content);
-    console.log("YouTube iframes:", content.match(/<iframe.*?\/iframe>/g));
+  const logContentStructure = (content) => {
+    console.log("Content structure check:");
+    console.log(
+      "- YouTube iframes:",
+      (content.match(/<iframe.*?src=".*?youtube.*?".*?\/iframe>/g) || []).length
+    );
+    console.log(
+      "- Sample YouTube match:",
+      content.match(/<iframe.*?src=".*?youtube.*?".*?\/iframe>/g)
+    );
   };
 
   const handlePublish = async () => {
@@ -43,9 +70,10 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
       return;
     }
 
-    debugContent(content);
-    setLoading(true);
+    console.log("Raw content before submit:", content);
+    logContentStructure(content);
 
+    setLoading(true);
     const postData = {
       title,
       content,

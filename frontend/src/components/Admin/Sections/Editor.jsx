@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EditorContent, useEditor, BubbleMenu } from "@tiptap/react";
-
 import { Node } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -182,7 +181,7 @@ const Editor = ({
         HTMLAttributes: {
           class: "w-full aspect-video rounded-lg my-4 dark:brightness-90",
         },
-        addPasteRules: false,
+        addPasteRules: true,
         parseHTML() {
           return [
             {
@@ -193,8 +192,9 @@ const Editor = ({
                     ? domNode
                     : domNode.querySelector("iframe");
                 if (
-                  (iframe && iframe.src.includes("youtube.com")) ||
-                  iframe?.src.includes("youtu.be")
+                  iframe &&
+                  (iframe.src.includes("youtube.com") ||
+                    iframe.src.includes("youtu.be"))
                 ) {
                   return { src: iframe.src };
                 }
@@ -203,6 +203,15 @@ const Editor = ({
             },
             {
               tag: 'iframe[src*="youtube.com"], iframe[src*="youtu.be"]',
+              getAttrs: (domNode) => {
+                if (domNode instanceof HTMLIFrameElement) {
+                  return { src: domNode.src };
+                }
+                return false;
+              },
+            },
+            {
+              tag: 'div > iframe[src*="youtube.com"], div > iframe[src*="youtu.be"]',
               getAttrs: (domNode) => {
                 if (domNode instanceof HTMLIFrameElement) {
                   return { src: domNode.src };
@@ -319,10 +328,21 @@ const Editor = ({
   };
 
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value);
+    if (editor && value) {
+      console.log("Setting editor content from value");
+      if (value.includes("youtube.com") || value.includes("youtu.be")) {
+        console.log("Found YouTube content in value");
+      }
+
+      if (value !== editor.getHTML()) {
+        editor.commands.setContent(value);
+
+        setTimeout(() => {
+          updateWordCount(editor);
+        }, 100);
+      }
     }
-  }, [value, editor]);
+  }, [value, editor, updateWordCount]);
 
   useEffect(() => {
     if (!editor) return;
