@@ -24,7 +24,6 @@ import Heading from "@tiptap/extension-heading";
 import OrderedList from "@tiptap/extension-ordered-list";
 import Youtube from "@tiptap/extension-youtube";
 import { Markdown } from "tiptap-markdown";
-import { jsPDF } from "jspdf";
 
 import {
   Bold,
@@ -41,7 +40,6 @@ import {
   Table as TableIcon,
   Sun,
   Moon,
-  FileDown,
   CheckSquare,
   Heading1,
   Heading2,
@@ -320,13 +318,6 @@ const Editor = ({
     editor.chain().focus().setColor(color).run();
   };
 
-  const exportToPDF = () => {
-    const content = editor.getText();
-    const pdf = new jsPDF();
-    pdf.text(content, 10, 10);
-    pdf.save("document.pdf");
-  };
-
   useEffect(() => {
     if (editor && value) {
       console.log("Setting editor content from value");
@@ -414,21 +405,9 @@ const Editor = ({
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
             className="flex-shrink-0 p-2 backdrop-blur-md bg-white/90 dark:bg-gray-900/90
-                     border-b border-gray-200 dark:border-gray-700 shadow-sm"
+                      border-b border-gray-200 dark:border-gray-700 shadow-sm"
           >
             <div className="flex flex-wrap gap-2 justify-center items-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                onClick={() => setShowToolbar(!showToolbar)}
-                className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 mr-2"
-                title={showToolbar ? "Hide Toolbar" : "Show Toolbar"}
-              >
-                {showToolbar ? (
-                  <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                ) : (
-                  <Palette className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                )}
-              </motion.button>
               {showToolbar && (
                 <>
                   <ToolbarGroup>
@@ -571,13 +550,6 @@ const Editor = ({
                       active={editor.isActive("highlight")}
                       icon={Highlighter}
                       tooltip="Highlight Text"
-                    />
-                  </ToolbarGroup>
-                  <ToolbarGroup>
-                    <MenuButton
-                      onClick={exportToPDF}
-                      icon={FileDown}
-                      tooltip="Export to PDF"
                     />
                   </ToolbarGroup>
                   <ToolbarGroup>
