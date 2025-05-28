@@ -101,6 +101,13 @@ const sanitizeContent = (req, res, next) => {
       },
     });
   }
+  
+  // Sanitize summary if provided
+  if (req.body.summary) {
+    // Remove HTML tags and limit to 200 characters
+    req.body.summary = req.body.summary.replace(/<[^>]*>/g, '').substring(0, 200);
+  }
+  
   next();
 };
 
@@ -118,8 +125,20 @@ router.post(
   sanitizeContent,
   asyncHandler(async (req, res) => {
     delete req.body.createdAt;
+    
+    console.log("Creating blog with data:", {
+      title: req.body.title,
+      summary: req.body.summary,
+      hasSummary: !!req.body.summary
+    });
+    
     const blog = new Blog(req.body);
     await blog.save();
+    console.log("Saved blog:", {
+      title: blog.title,
+      summary: blog.summary,
+      hasSummary: !!blog.summary
+    });
     res.status(201).json(blog);
   })
 );
@@ -187,10 +206,18 @@ router.put(
   asyncHandler(async (req, res) => {
     const slug = req.params[0];
     console.log("Update slug:", slug);
+    console.log("Update data:", {
+      title: req.body.title,
+      summary: req.body.summary,
+      hasSummary: !!req.body.summary
+    });
+    
     const blog = await Blog.findOne({ slug });
     if (!blog) return res.status(404).json({ message: "Blog not found" });
 
     const originalTitle = blog.title;
+    
+    // Update all fields including summary
     Object.assign(blog, req.body);
 
     if (req.body.title && req.body.title.trim() !== originalTitle.trim()) {
@@ -203,6 +230,11 @@ router.put(
     }
 
     await blog.save();
+    console.log("Updated blog:", {
+      title: blog.title,
+      summary: blog.summary,
+      hasSummary: !!blog.summary
+    });
     res.json(blog);
   })
 );

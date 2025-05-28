@@ -9,6 +9,7 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
   const [title, setTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [keywords, setKeywords] = useState("");
+  const [summary, setSummary] = useState(""); // New state for summary
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
@@ -33,6 +34,7 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
           setTitle(data.title);
           setMetaDescription(data.metaDescription);
           setKeywords(data.keywords.join(", "));
+          setSummary(data.summary || ""); // Set summary from data
 
           console.log("Fetched content:", data.content);
 
@@ -77,6 +79,7 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
     const postData = {
       title,
       content,
+      summary, // Add summary to postData
       metaDescription,
       keywords: keywords.split(",").map((k) => k.trim()),
     };
@@ -146,6 +149,23 @@ const BlogForm = ({ isDark, setIsDark, setServerBlogs, refreshBlogs }) => {
             onChange={(e) => setTitle(e.target.value)}
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             placeholder="Enter blog title"
+          />
+        </div>
+
+        {/* New summary field */}
+        <div>
+          <label className="block mb-2 font-medium">
+            Summary (max 200 characters)
+            <span className="text-sm text-gray-500 ml-2">
+              {summary.length}/200
+            </span>
+          </label>
+          <textarea
+            value={summary}
+            onChange={(e) => setSummary(e.target.value.substring(0, 200))}
+            className="w-full p-2 border rounded h-20 focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            placeholder="Enter a short summary (leave empty to auto-generate from content)"
+            maxLength={200}
           />
         </div>
 

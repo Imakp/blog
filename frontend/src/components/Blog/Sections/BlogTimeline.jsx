@@ -138,7 +138,7 @@ const BlogTimeline = ({ blogs }) => {
                           key={`${monthData.yearMonth}-${index}`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between items-center"
+                          className="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex flex-col"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center flex-nowrap">
                             <span className="mb-1 sm:mb-0 sm:mr-4 text-sm text-gray-400 dark:text-gray-500">
@@ -154,6 +154,13 @@ const BlogTimeline = ({ blogs }) => {
                               </Link>
                             </span>
                           </div>
+                          
+                          {/* Display the summary */}
+                          {article.summary && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-0 sm:ml-10 line-clamp-2">
+                              {article.summary}
+                            </p>
+                          )}
                         </motion.div>
                       ))}
                     </div>

@@ -165,19 +165,28 @@ const BlogTimeline = ({ blogs, isDark, refreshBlogs }) => {
                           animate={{ opacity: 1 }}
                           className="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0"
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-center flex-nowrap">
-                            <span className="mb-1 sm:mb-0 sm:mr-4 text-sm text-gray-400 dark:text-gray-500">
-                              {article.day}
-                            </span>
-                            <span className="text-gray-700 dark:text-gray-300 flex items-center">
-                              <span className="hidden sm:inline">-</span>
-                              <Link
-                                to={`/post/${article.slug}`}
-                                className="sm:ml-2 hover:underline line-clamp-1"
-                              >
-                                {article.title}
-                              </Link>
-                            </span>
+                          <div className="flex flex-col w-full sm:w-auto">
+                            <div className="flex flex-col sm:flex-row sm:items-center flex-nowrap">
+                              <span className="mb-1 sm:mb-0 sm:mr-4 text-sm text-gray-400 dark:text-gray-500">
+                                {article.day}
+                              </span>
+                              <span className="text-gray-700 dark:text-gray-300 flex items-center">
+                                <span className="hidden sm:inline">-</span>
+                                <Link
+                                  to={`/post/${article.slug}`}
+                                  className="sm:ml-2 hover:underline line-clamp-1"
+                                >
+                                  {article.title}
+                                </Link>
+                              </span>
+                            </div>
+                            
+                            {/* Display the summary */}
+                            {article.summary && (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-0 sm:ml-10 line-clamp-2">
+                                {article.summary}
+                              </p>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-2 ml-4">
